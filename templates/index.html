@@ -441,26 +441,42 @@
             }
         }
 
-        @media (max-width: 1200px) {
-            .dashboard {
-                flex-direction: column;
-                align-items: center;
-            }
+        /* Scroll Buttons */
+        .scroll-btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            color: var(--accent-color);
+            transition: all 0.2s;
+        }
 
-            .sidebar {
-                width: 100%;
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            }
+        .scroll-btn:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+        }
 
-            .visuals-container {
-                grid-template-columns: 1fr;
-            }
+        .scroll-left {
+            left: -20px;
+        }
 
-            .forecast-row {
-                overflow-x: scroll;
-                justify-content: flex-start;
-            }
+        .scroll-right {
+            right: -20px;
+        }
+
+        .forecast-container {
+            position: relative;
+            width: 100%;
         }
 
         /* Mobile Responsiveness */
@@ -468,27 +484,61 @@
             .dashboard {
                 flex-direction: column;
                 align-items: center;
+                padding: 10px;
+                gap: 1rem;
             }
 
             .sidebar {
                 width: 100%;
                 order: 2;
-                /* Move sidebars below main content */
             }
 
             .main-content {
                 width: 100%;
                 order: 1;
-                /* Main content first */
+                padding: 0;
             }
 
             .main-city-name {
-                font-size: 2rem;
+                font-size: 1.8rem;
+            }
+
+            .search-form input {
+                width: 140px;
             }
 
             .forecast-row {
                 justify-content: flex-start;
-                /* Allow scrolling */
+                gap: 10px;
+                padding-bottom: 10px;
+                scroll-behavior: smooth;
+            }
+
+            .forecast-card-main {
+                min-width: 100px;
+                padding: 1rem 0.5rem;
+            }
+
+            .forecast-card-main h3 {
+                font-size: 0.9rem;
+            }
+
+            .weather-icon {
+                font-size: 1.5rem;
+            }
+
+            .scroll-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
+
+            .scroll-left {
+                left: -10px;
+            }
+
+            .scroll-right {
+                right: -10px;
             }
         }
     </style>
@@ -577,20 +627,27 @@
                 </div>
                 {% endif %}
 
-                <div class="forecast-row">
-                    {% for day in main_forecast %}
-                    <div class="forecast-card-main">
-                        <div class="day-name">{{ day.day }}</div>
-                        <div class="weather-icon"><i class="fas {{ day.icon }}"></i></div>
-                        <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
-                        <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
-                        <div class="explanation">{{ day.explanation }}</div>
-                        <div class="details">
-                            <div>{{ day.temp }}°C</div>
-                            <div>Hum: {{ day.humidity }}%</div>
+                <!-- 14-Day Forecast -->
+                <div class="forecast-container">
+                    <button class="scroll-btn scroll-left" onclick="scrollForecast(-1)"><i
+                            class="fa-solid fa-chevron-left"></i></button>
+                    <div class="forecast-row" id="forecastRow">
+                        {% for day in main_forecast %}
+                        <div class="forecast-card-main" style="border-bottom: 4px solid {{ day.color }}">
+                            <div class="day-name">{{ day.day }}</div>
+                            <div class="weather-icon"><i class="fas {{ day.icon }}"></i></div>
+                            <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
+                            <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
+                            <div class="explanation">{{ day.explanation }}</div>
+                            <div class="details">
+                                <div>{{ day.temp }}°C</div>
+                                <div>Hum: {{ day.humidity }}%</div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                    <button class="scroll-btn scroll-right" onclick="scrollForecast(1)"><i
+                            class="fa-solid fa-chevron-right"></i></button>
                 </div>
 
                 <!-- Visuals: Chart & Map -->
@@ -705,6 +762,57 @@
                 searchResults.style.display = 'none';
             }
         });
+
+        function locateMe() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            const btn = document.querySelector('.fa-location-crosshairs');
+            btn.classList.add('fa-spin');
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // Call our new API
+                fetch(`/api/forecast-by-coords?lat=${lat}&lon=${lon}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.classList.remove('fa-spin');
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+                        // Redirect to the city page (or just reload with the city name)
+                        // Since our app is server-side rendered for the main view, 
+                        // we can just submit the form with the city name we found!
+                        if (data.city) {
+                            document.getElementById('cityInput').value = data.city;
+                            document.getElementById('searchForm').submit();
+                        }
+                    })
+                    .catch(err => {
+                        btn.classList.remove('fa-spin');
+                        console.error(err);
+                        alert("Error fetching location data.");
+                    });
+            }, (error) => {
+                btn.classList.remove('fa-spin');
+                alert("Unable to retrieve your location.");
+            });
+        }
+
+        function scrollForecast(direction) {
+            const container = document.getElementById('forecastRow');
+            const scrollAmount = 200;
+            if (direction === 1) {
+                container.scrollLeft += scrollAmount;
+            } else {
+                container.scrollLeft -= scrollAmount;
+            }
+        }
     </script>
 
     {% if main_forecast %}
@@ -806,63 +914,18 @@
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        position: 'left',
-                        grid: { color: 'rgba(0,0,0,0.05)' },
                         title: { display: true, text: 'Quality Score' }
                     },
                     y1: {
-                        beginAtZero: true,
+                        type: 'linear',
+                        display: true,
                         position: 'right',
-                        grid: { display: false },
-                        title: { display: true, text: 'Temperature (°C)' }
-                    },
-                    x: { grid: { display: false } }
+                        title: { display: true, text: 'Temperature (°C)' },
+                        grid: { drawOnChartArea: false }
+                    }
                 }
             }
         });
-
-        // Comparison Logic
-        function compareCity(city) {
-            if (!city) {
-                if (trendChart.data.datasets.length > 2) {
-                    trendChart.data.datasets.pop();
-                    trendChart.update();
-                }
-                return;
-            }
-
-            fetch(`/api/forecast?city=${encodeURIComponent(city)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-
-                    const comparisonData = data.forecast.map(d => d.quality);
-
-                    if (trendChart.data.datasets.length > 2) {
-                        trendChart.data.datasets.pop();
-                    }
-
-                    trendChart.data.datasets.push({
-                        label: city,
-                        data: comparisonData,
-                        borderColor: '#d63031',
-                        backgroundColor: 'rgba(214, 48, 49, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#d63031',
-                        pointRadius: 5,
-                        fill: true,
-                        tension: 0.4,
-                        borderDash: [5, 5],
-                        yAxisID: 'y'
-                    });
-
-                    trendChart.update();
-                })
-                .catch(err => console.error(err));
-        }
 
         // --- Map Logic ---
         const mainData = mainForecast[0];
@@ -897,48 +960,6 @@
         Object.entries(otherForecasts).forEach(([city, data]) => {
             addMarker(data.lat, data.lon, city, data.quality, data.color);
         });
-
-        // --- Geolocation Logic ---
-        function locateMe() {
-            if (!navigator.geolocation) {
-                alert("Geolocation is not supported by your browser.");
-                return;
-            }
-
-            const btn = document.querySelector('.fa-location-crosshairs');
-            btn.classList.add('fa-spin');
-
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                // Call our new API
-                fetch(`/api/forecast-by-coords?lat=${lat}&lon=${lon}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        btn.classList.remove('fa-spin');
-                        if (data.error) {
-                            alert(data.error);
-                            return;
-                        }
-                        // Redirect to the city page (or just reload with the city name)
-                        // Since our app is server-side rendered for the main view, 
-                        // we can just submit the form with the city name we found!
-                        if (data.city) {
-                            document.getElementById('cityInput').value = data.city;
-                            document.getElementById('searchForm').submit();
-                        }
-                    })
-                    .catch(err => {
-                        btn.classList.remove('fa-spin');
-                        console.error(err);
-                        alert("Error fetching location data.");
-                    });
-            }, (error) => {
-                btn.classList.remove('fa-spin');
-                alert("Unable to retrieve your location.");
-            });
-        }
     </script>
     {% endif %}
 
