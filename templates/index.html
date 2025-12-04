@@ -479,6 +479,30 @@
             width: 100%;
         }
 
+        /* Chart Controls */
+        .chart-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 5px;
+        }
+
+        .chart-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            border-radius: 15px;
+            color: var(--text-color);
+        }
+
+        .chart-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 1200px) {
             .dashboard {
@@ -504,7 +528,19 @@
             }
 
             .search-form input {
-                width: 140px;
+                width: 90px;
+                /* Reduced width */
+                padding: 8px 10px;
+            }
+
+            .search-form button {
+                padding: 8px 15px;
+            }
+
+            .live-indicator {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+                margin-left: 5px;
             }
 
             .forecast-row {
@@ -653,6 +689,11 @@
                 <!-- Visuals: Chart & Map -->
                 <div class="visuals-container">
                     <div class="chart-container">
+                        <div class="chart-controls">
+                            <button class="chart-btn active" onclick="updateChart('forecast')"
+                                id="btn-forecast">Forecast</button>
+                            <button class="chart-btn" onclick="updateChart('history')" id="btn-history">History</button>
+                        </div>
                         <canvas id="trendChart"></canvas>
                     </div>
                     <div class="map-container">
@@ -851,81 +892,87 @@
 
         // --- Chart Logic ---
         const ctx = document.getElementById('trendChart').getContext('2d');
-        const labels = mainForecast.map(d => d.day);
-        const data1 = mainForecast.map(d => d.quality);
-        const colors = mainForecast.map(d => d.color);
 
-        // Process History Data for "Climate Time Machine"
+        // Forecast Data
+        const forecastLabels = mainForecast.map(d => d.day);
+        const forecastData = mainForecast.map(d => d.quality);
+        const forecastColors = mainForecast.map(d => d.color);
+
+        // History Data
+        const historyLabels = historyData.map(d => d.year);
         const historyTemps = historyData.map(d => d.temp);
-        // Pad with nulls if fewer than labels
-        const historyDataset = historyTemps.concat(new Array(Math.max(0, labels.length - historyTemps.length)).fill(null));
 
-        let trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: `${mainCity} Quality`,
-                        data: data1,
-                        borderColor: '#0984e3',
-                        backgroundColor: 'rgba(9, 132, 227, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: colors,
-                        pointRadius: 5,
-                        fill: true,
-                        tension: 0.4,
-                        yAxisID: 'y'
+        let trendChart;
+
+        function initChart(mode) {
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            let labels, datasets, title;
+
+            if (mode === 'forecast') {
+                labels = forecastLabels;
+                title = '14-Day Quality Forecast';
+                datasets = [{
+                    label: 'Quality Score',
+                    data: forecastData,
+                    borderColor: '#0984e3',
+                    backgroundColor: 'rgba(9, 132, 227, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: forecastColors,
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }];
+            } else {
+                labels = historyLabels;
+                title = 'Climate Trend (Last 5 Years)';
+                datasets = [{
+                    label: 'Avg Temperature (°C)',
+                    data: historyTemps,
+                    borderColor: '#ff7675',
+                    backgroundColor: 'rgba(255, 118, 117, 0.2)',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    fill: true,
+                    tension: 0.3
+                }];
+            }
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: title, font: { size: 16 } }
                     },
-                    {
-                        label: 'Climate Trend (Last 5 Years °C)',
-                        data: historyDataset,
-                        borderColor: '#ff7675',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        borderDash: [5, 5],
-                        tension: 0.4,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true },
-                    title: { display: true, text: 'Forecast vs. Climate History', font: { size: 16 } },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                if (context.dataset.label.includes('Climate')) {
-                                    const yearIdx = context.dataIndex;
-                                    if (historyData[yearIdx]) {
-                                        return `${historyData[yearIdx].year}: ${historyData[yearIdx].temp}°C`;
-                                    }
-                                }
-                                return context.formattedValue;
-                            }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: mode === 'forecast' ? 'Quality Score' : 'Temperature (°C)' }
                         }
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: { display: true, text: 'Quality Score' }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: { display: true, text: 'Temperature (°C)' },
-                        grid: { drawOnChartArea: false }
-                    }
                 }
-            }
-        });
+            });
+        }
+
+        function updateChart(mode) {
+            // Update Buttons
+            document.getElementById('btn-forecast').classList.toggle('active', mode === 'forecast');
+            document.getElementById('btn-history').classList.toggle('active', mode === 'history');
+
+            initChart(mode);
+        }
+
+        // Initialize with Forecast
+        initChart('forecast');
 
         // --- Map Logic ---
         const mainData = mainForecast[0];
