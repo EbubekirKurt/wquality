@@ -89,18 +89,43 @@ def get_quality_category(score):
     return "Terrible", "#d63031"                  # Red
 
 def generate_explanation(temp, humidity, cloud_cover, score):
-    """Generates a short explanation for the quality score."""
+    """Generates a detailed 'Explainable AI' insight for the quality score."""
+    reasons = []
+    
+    # Analyze Temperature (Ideal: 18-26)
+    if temp < 10:
+        reasons.append(f"Very Cold ({temp}°C)")
+    elif temp < 18:
+        reasons.append(f"Chilly ({temp}°C)")
+    elif temp > 30:
+        reasons.append(f"Very Hot ({temp}°C)")
+    elif temp > 26:
+        reasons.append(f"Warm ({temp}°C)")
+    else:
+        if score > 70: reasons.append("Ideal Temperature")
+
+    # Analyze Humidity (Ideal: 30-60)
+    if humidity > 80:
+        reasons.append(f"High Humidity ({humidity}%)")
+    elif humidity < 20:
+        reasons.append(f"Dry Air ({humidity}%)")
+    
+    # Analyze Cloud Cover
+    if cloud_cover > 80:
+        reasons.append("Overcast")
+    elif cloud_cover < 20 and score > 70:
+        reasons.append("Clear Skies")
+
+    # Construct Sentence
     if score >= 80:
-        if 18 <= temp <= 25: return "Ideal Temperature"
-        if humidity < 50: return "Low Humidity"
-        return "Great Conditions"
-    if score < 50:
-        if humidity > 80: return "High Humidity"
-        if cloud_cover > 80: return "Heavy Cloud Cover"
-        if temp < 5: return "Too Cold"
-        if temp > 30: return "Too Hot"
-        return "Poor Conditions"
-    return "Moderate Conditions"
+        return f"Excellent conditions! {', '.join(reasons)} contributing to a high score."
+    elif score >= 50:
+        return f"Moderate quality. {', '.join(reasons)}."
+    else:
+        # For low scores, focus on the negatives
+        negatives = [r for r in reasons if "Ideal" not in r and "Clear" not in r]
+        if not negatives: negatives = ["Unfavorable conditions"]
+        return f"Score lowered by: {', '.join(negatives)}."
 
 def get_activity_recommendations(forecasts):
     """Finds the best day for specific activities."""

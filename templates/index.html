@@ -327,6 +327,97 @@
             color: #636e72;
         }
 
+        /* AI Explain Button */
+        .ai-explain-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--accent-color);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin: 5px 0;
+            transition: all 0.2s;
+        }
+
+        .ai-explain-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Modal Styles */
+        .ai-modal {
+            border: none;
+            border-radius: 20px;
+            padding: 0;
+            background: transparent;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .ai-modal::backdrop {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .close-btn {
+            background: transparent;
+            color: #636e72;
+            font-size: 1.5rem;
+            padding: 0;
+            width: auto;
+        }
+
+        .close-btn:hover {
+            color: #d63031;
+            transform: none;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        #modalText {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #2d3436;
+        }
+
         /* Chart & Map Container */
         .visuals-container {
             display: grid;
@@ -679,7 +770,13 @@
                             <div class="weather-icon"><i class="fas {{ day.icon }}"></i></div>
                             <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
                             <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
-                            <div class="explanation">{{ day.explanation }}</div>
+
+                            <!-- AI Explanation Button -->
+                            <button class="ai-explain-btn"
+                                onclick="showExplanation('{{ day.explanation }}', '{{ day.quality }}', '{{ day.color }}')">
+                                <i class="fas fa-brain"></i> Why?
+                            </button>
+
                             <div class="details">
                                 <div>{{ day.temp }}°C</div>
                                 <div>Hum: {{ day.humidity }}%</div>
@@ -690,6 +787,20 @@
                     <button class="scroll-btn scroll-right" onclick="scrollForecast(1)"><i
                             class="fa-solid fa-chevron-right"></i></button>
                 </div>
+
+                <!-- Explanation Modal -->
+                <dialog id="explanationModal" class="ai-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-robot"></i> AI Analysis</h2>
+                            <button onclick="closeModal()" class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="score-circle" id="modalScore">--</div>
+                            <p id="modalText">Analysis goes here...</p>
+                        </div>
+                    </div>
+                </dialog>
 
                 <!-- Visuals: Chart & Map -->
                 <div class="visuals-container">
@@ -859,6 +970,37 @@
                 container.scrollLeft -= scrollAmount;
             }
         }
+
+        // Modal Logic
+        function showExplanation(text, score, color) {
+            const modal = document.getElementById('explanationModal');
+            const modalText = document.getElementById('modalText');
+            const modalScore = document.getElementById('modalScore');
+
+            modalText.textContent = text;
+            modalScore.textContent = score;
+            modalScore.style.backgroundColor = color;
+
+            modal.showModal();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('explanationModal');
+            modal.close();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('explanationModal').addEventListener('click', (e) => {
+            const dialogDimensions = e.target.getBoundingClientRect();
+            if (
+                e.clientX < dialogDimensions.left ||
+                e.clientX > dialogDimensions.right ||
+                e.clientY < dialogDimensions.top ||
+                e.clientY > dialogDimensions.bottom
+            ) {
+                e.target.close();
+            }
+        });
     </script>
 
     {% if main_forecast %}
