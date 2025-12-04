@@ -6,3 +6,4 @@ scikit-learn
 requests
 python-dotenv
 gunicorn
+huggingface_hub

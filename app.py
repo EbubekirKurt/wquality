@@ -24,12 +24,24 @@ GEOCODING_API_URL = os.getenv('GEOCODING_API_URL')
 
 def load_assets():
     global model, scaler
-    if os.path.exists(MODEL_PATH):
-        print(f"Loading model from {MODEL_PATH}...")
-        model = keras.models.load_model(MODEL_PATH)
-    if os.path.exists(SCALER_PATH):
-        print(f"Loading scaler from {SCALER_PATH}...")
-        scaler = joblib.load(SCALER_PATH)
+    try:
+        print("Attempting to load model...")
+        # Try loading local file first
+        if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 1000:
+             print(f"Loading local model from {MODEL_PATH}...")
+             model = keras.models.load_model(MODEL_PATH)
+        else:
+             print("Local model not found or too small (LFS pointer). Downloading from Hub...")
+             from huggingface_hub import hf_hub_download
+             # Download from the Space itself
+             model_path = hf_hub_download(repo_id="ebubekirkurtt/weather-quality-app", filename="weather_model.keras", repo_type="space")
+             model = keras.models.load_model(model_path)
+             
+        if os.path.exists(SCALER_PATH):
+            print(f"Loading scaler from {SCALER_PATH}...")
+            scaler = joblib.load(SCALER_PATH)
+    except Exception as e:
+        print(f"Error loading assets: {e}")
 
 load_assets()
 
