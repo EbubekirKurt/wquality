@@ -347,11 +347,40 @@
             border: var(--glass-border);
         }
 
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+        }
+
         #map {
             height: 100%;
             width: 100%;
             border-radius: 10px;
             z-index: 1;
+        }
+
+        /* Chart Controls */
+        .chart-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+            margin-bottom: 5px;
+            /* No absolute positioning */
+        }
+
+        .chart-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 15px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .chart-btn.active {
+            background: var(--accent-color);
+            color: white;
         }
 
         /* Other Cities Cards (in Sidebar) */
@@ -477,30 +506,6 @@
         .forecast-container {
             position: relative;
             width: 100%;
-        }
-
-        /* Chart Controls */
-        .chart-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 10;
-            display: flex;
-            gap: 5px;
-        }
-
-        .chart-btn {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            border-radius: 15px;
-            color: var(--text-color);
-        }
-
-        .chart-btn.active {
-            background: var(--accent-color);
-            color: white;
         }
 
         /* Mobile Responsiveness */
