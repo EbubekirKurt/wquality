@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        :root {
+            --primary-bg: #e0e5ec;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --text-color: #2d3436;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            align-items: flex-start;
+            padding: 0 20px;
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0;
+        }
+
+        /* Search Bar */
+        .search-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(4px);
+            border: var(--glass-border);
+            position: relative;
+            align-items: center;
+        }
+
+        input {
+            border: none;
+            background: transparent;
+            padding: 10px 20px;
+            font-size: 1rem;
+            outline: none;
+            color: var(--text-color);
+            font-family: inherit;
+            width: 300px;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .mic-btn {
+            background: transparent;
+            color: var(--accent-color);
+            padding: 10px;
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+
+        .mic-btn:hover {
+            transform: scale(1.1);
+            background: transparent;
+        }
+
+        .mic-active {
+            color: #d63031;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Autocomplete Dropdown */
+        .search-results {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-result-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        /* Main City Section */
+        .main-city-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+        }
+
+        .main-city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-left {
+            text-align: left;
+        }
+
+        .main-city-name {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(45deg, #2d3436, #0984e3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .comparison-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compare-select {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.8);
+            font-family: inherit;
+            outline: none;
+        }
+
+        /* Smart Planner */
+        .planner-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .planner-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 1rem;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .planner-icon {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            background: rgba(9, 132, 227, 0.1);
+            padding: 10px;
+            border-radius: 50%;
+        }
+
+        .planner-info h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .planner-info p {
+            margin: 5px 0 0 0;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .forecast-card-main {
+            flex: 1;
+            min-width: 140px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .forecast-card-main:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .day-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #636e72;
+        }
+
+        .weather-icon {
+            font-size: 2rem;
+            margin: 10px 0;
+            color: var(--accent-color);
+        }
+
+        .quality-score-main {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .quality-category {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .explanation {
+            font-size: 0.75rem;
+            color: #636e72;
+            font-style: italic;
+            margin-top: 5px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 5px;
+        }
+
+        .details {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        /* Chart & Map Container */
+        .visuals-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-container,
+        .map-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            padding: 1rem;
+            box-sizing: border-box;
+            border: var(--glass-border);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        /* Other Cities Cards (in Sidebar) */
+        .city-card-small {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(4px);
+            border: var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .city-card-small:hover {
+            transform: scale(1.02);
+        }
+
+        .city-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+        }
+
+        .city-temp {
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+
+        .quality-badge {
+            background: #00b894;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #ff7675;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Live Indicator */
+        .live-indicator {
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #00b894;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00b894;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .sidebar {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+
+            .visuals-container {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast-row {
+                overflow-x: scroll;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            {% for city, data in other_forecasts.items() | list | batch(8) | first %}
+            <div class="city-card-small" onclick="searchCity('{{ city }}')">
+                <div class="city-info">
+                    <h3>{{ city }}</h3>
+                    <div class="details">
+                        <i class="fas {{ data.icon }}"></i> {{ data.category }}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="city-temp">{{ data.temp }}°C</div>
+                    <div class="quality-badge" data-bg-color="{{ data.color }}">Q: {{ data.quality }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Main Content (Center) -->
+        <div class="main-content">
+            <!-- Search -->
+            <div class="search-container">
+                <form class="search-form" method="POST" action="/predict" id="searchForm">
+                    <div style="position: relative;">
+                        <input type="text" id="cityInput" name="city" placeholder="Search city..." autocomplete="off"
+                            required>
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                    <button type="button" class="mic-btn" onclick="startVoiceSearch()" title="Voice Search"><i
+                            class="fas fa-microphone"></i></button>
+                    <button type="button" class="mic-btn" onclick="locateMe()" title="Use My Location"><i
+                            class="fas fa-location-crosshairs"></i></button>
+                    <button type="submit">Search</button>
+                </form>
+                <div class="live-indicator" id="liveIndicator" style="display: none;">
+                    <span class="pulse-dot"></span> Live
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <!-- Main City Section -->
+            {% if main_forecast %}
+            <div class="main-city-section">
+                <div class="main-city-header">
+                    <div class="header-left">
+                        <h1 class="main-city-name">{{ main_city }}</h1>
+                        <p>14-Day Weather Quality Forecast</p>
+                    </div>
+                    <div class="comparison-controls">
+                        <label>Compare with:</label>
+                        <select id="compareSelect" class="compare-select" onchange="compareCity(this.value)">
+                            <option value="">Select City...</option>
+                            <option value="New York">New York</option>
+                            <option value="Tokyo">Tokyo</option>
+                            <option value="London">London</option>
+                            <option value="Paris">Paris</option>
+                            <option value="Berlin">Berlin</option>
+                            <option value="Sydney">Sydney</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Smart Planner -->
+                {% if activities %}
+                <div class="planner-section">
+                    {% for activity, details in activities.items() %}
+                    <div class="planner-card">
+                        <div class="planner-icon"><i class="fas {{ details.icon }}"></i></div>
+                        <div class="planner-info">
+                            <h4>Best for {{ activity }}</h4>
+                            <p>{{ details.day }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="forecast-row">
+                    {% for day in main_forecast %}
+                    <div class="forecast-card-main">
+                        <div class="day-name">{{ day.day }}</div>
+                        <div class="weather-icon"><i class="fas {{ day.icon }}"></i></div>
+                        <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
+                        <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
+                        <div class="explanation">{{ day.explanation }}</div>
+                        <div class="details">
+                            <div>{{ day.temp }}°C</div>
+                            <div>Hum: {{ day.humidity }}%</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Visuals: Chart & Map -->
+                <div class="visuals-container">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                    <div class="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            {% set items = other_forecasts.items() | list %}
+            {% if items | length > 8 %}
+            {% for city, data in items[8:] %}
+            <div class="city-card-small" onclick="searchCity('{{ city }}')">
+                <div class="city-info">
+                    <h3>{{ city }}</h3>
+                    <div class="details">
+                        <i class="fas {{ data.icon }}"></i> {{ data.category }}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="city-temp">{{ data.temp }}°C</div>
+                    <div class="quality-badge" data-bg-color="{{ data.color }}">Q: {{ data.quality }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function searchCity(cityName) {
+            document.getElementById('cityInput').value = cityName;
+            document.getElementById('searchForm').submit();
+        }
+
+        // Voice Search Logic
+        function startVoiceSearch() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice search not supported in this browser.");
+                return;
+            }
+            const recognition = new webkitSpeechRecognition();
+            const btn = document.querySelector('.mic-btn i');
+
+            recognition.onstart = function () {
+                btn.classList.remove('fa-microphone');
+                btn.classList.add('fa-microphone-lines', 'mic-active');
+            };
+
+            recognition.onend = function () {
+                btn.classList.add('fa-microphone');
+                btn.classList.remove('fa-microphone-lines', 'mic-active');
+            };
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('cityInput').value = transcript;
+                document.getElementById('searchForm').submit();
+            };
+
+            recognition.start();
+        }
+
+        // Autocomplete Logic
+        const cityInput = document.getElementById('cityInput');
+        const searchResults = document.getElementById('searchResults');
+        let debounceTimer;
+
+        cityInput.addEventListener('input', function () {
+            const query = this.value;
+            clearTimeout(debounceTimer);
+            if (query.length < 3) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetch(`/api/search-city?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        if (data.results && data.results.length > 0) {
+                            data.results.forEach(city => {
+                                const div = document.createElement('div');
+                                div.className = 'search-result-item';
+                                div.textContent = city.display;
+                                div.onclick = () => {
+                                    cityInput.value = city.name;
+                                    searchResults.style.display = 'none';
+                                    document.getElementById('searchForm').submit();
+                                };
+                                searchResults.appendChild(div);
+                            });
+                            searchResults.style.display = 'flex';
+                        } else {
+                            searchResults.style.display = 'none';
+                        }
+                    })
+                    .catch(err => console.error('Error fetching cities:', err));
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target !== cityInput && e.target !== searchResults) {
+                searchResults.style.display = 'none';
+            }
+        });
+    </script>
+
+    {% if main_forecast %}
+    <!-- Data passed from Flask to JS via JSON -->
+    <script id="main-forecast-data" type="application/json">{{ main_forecast | tojson }}</script>
+    <script id="history-data" type="application/json">{{ history | tojson }}</script>
+    <script id="other-forecasts-data" type="application/json">{{ other_forecasts | tojson }}</script>
+    <script id="main-city-data" type="application/json">{{ main_city | tojson }}</script>
+
+    <script>
+        // Apply dynamic styles from data attributes
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-bg-color]').forEach(el => {
+                el.style.backgroundColor = el.dataset.bgColor;
+            });
+            document.querySelectorAll('[data-text-color]').forEach(el => {
+                el.style.color = el.dataset.textColor;
+            });
+
+            // Start Auto-Refresh if we have a main city
+            if (document.getElementById('main-city-data')) {
+                document.getElementById('liveIndicator').style.display = 'flex';
+                setInterval(() => {
+                    // In a real app, this would fetch new data silently and update the DOM.
+                    // For this demo, we'll just blink the indicator to show it's "Live".
+                    console.log("Auto-refreshing data...");
+                }, 300000); // 5 minutes
+            }
+        });
+
+        // --- Data Loading ---
+        const mainForecast = JSON.parse(document.getElementById('main-forecast-data').textContent);
+        const historyData = JSON.parse(document.getElementById('history-data').textContent); // Now contains list of {year, temp}
+        const otherForecasts = JSON.parse(document.getElementById('other-forecasts-data').textContent);
+        const mainCity = JSON.parse(document.getElementById('main-city-data').textContent);
+
+        // --- Chart Logic ---
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const labels = mainForecast.map(d => d.day);
+        const data1 = mainForecast.map(d => d.quality);
+        const colors = mainForecast.map(d => d.color);
+
+        // Process History Data for "Climate Time Machine"
+        const historyTemps = historyData.map(d => d.temp);
+        // Pad with nulls if fewer than labels
+        const historyDataset = historyTemps.concat(new Array(Math.max(0, labels.length - historyTemps.length)).fill(null));
+
+        let trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `${mainCity} Quality`,
+                        data: data1,
+                        borderColor: '#0984e3',
+                        backgroundColor: 'rgba(9, 132, 227, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: colors,
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Climate Trend (Last 5 Years °C)',
+                        data: historyDataset,
+                        borderColor: '#ff7675',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true },
+                    title: { display: true, text: 'Forecast vs. Climate History', font: { size: 16 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                if (context.dataset.label.includes('Climate')) {
+                                    const yearIdx = context.dataIndex;
+                                    if (historyData[yearIdx]) {
+                                        return `${historyData[yearIdx].year}: ${historyData[yearIdx].temp}°C`;
+                                    }
+                                }
+                                return context.formattedValue;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        position: 'left',
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        title: { display: true, text: 'Quality Score' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: { display: false },
+                        title: { display: true, text: 'Temperature (°C)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Comparison Logic
+        function compareCity(city) {
+            if (!city) {
+                if (trendChart.data.datasets.length > 2) {
+                    trendChart.data.datasets.pop();
+                    trendChart.update();
+                }
+                return;
+            }
+
+            fetch(`/api/forecast?city=${encodeURIComponent(city)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    const comparisonData = data.forecast.map(d => d.quality);
+
+                    if (trendChart.data.datasets.length > 2) {
+                        trendChart.data.datasets.pop();
+                    }
+
+                    trendChart.data.datasets.push({
+                        label: city,
+                        data: comparisonData,
+                        borderColor: '#d63031',
+                        backgroundColor: 'rgba(214, 48, 49, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#d63031',
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.4,
+                        borderDash: [5, 5],
+                        yAxisID: 'y'
+                    });
+
+                    trendChart.update();
+                })
+                .catch(err => console.error(err));
+        }
+
+        // --- Map Logic ---
+        const mainData = mainForecast[0];
+        const mainLat = mainData.lat;
+        const mainLon = mainData.lon;
+        const mainCityName = "{{ main_city }}"; // Fallback if JSON fails, but we use JS var
+        const mainQuality = mainData.quality;
+        const mainColor = mainData.color;
+
+        const map = L.map('map').setView([mainLat, mainLon], 4);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        function addMarker(lat, lon, city, quality, color) {
+            L.circleMarker([lat, lon], {
+                radius: 10,
+                fillColor: color,
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map)
+                .bindPopup(`<b>${city}</b><br>Quality: ${quality}`);
+        }
+
+        addMarker(mainLat, mainLon, mainCity, mainQuality, mainColor);
+
+        // Add markers for other cities
+        Object.entries(otherForecasts).forEach(([city, data]) => {
+            addMarker(data.lat, data.lon, city, data.quality, data.color);
+        });
+
+        // --- Geolocation Logic ---
+        function locateMe() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            const btn = document.querySelector('.fa-location-crosshairs');
+            btn.classList.add('fa-spin');
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // Call our new API
+                fetch(`/api/forecast-by-coords?lat=${lat}&lon=${lon}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.classList.remove('fa-spin');
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+                        // Redirect to the city page (or just reload with the city name)
+                        // Since our app is server-side rendered for the main view, 
+                        // we can just submit the form with the city name we found!
+                        if (data.city) {
+                            document.getElementById('cityInput').value = data.city;
+                            document.getElementById('searchForm').submit();
+                        }
+                    })
+                    .catch(err => {
+                        btn.classList.remove('fa-spin');
+                        console.error(err);
+                        alert("Error fetching location data.");
+                    });
+            }, (error) => {
+                btn.classList.remove('fa-spin');
+                alert("Unable to retrieve your location.");
+            });
+        }
+    </script>
+    {% endif %}
+
+</body>
+
+</html>
