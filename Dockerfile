@@ -16,8 +16,16 @@ WORKDIR $HOME/app
 # Copy the current directory contents into the container at $HOME/app setting the owner to the user
 COPY --chown=user . $HOME/app
 
-# Install requirements
+# Install requirements and git-lfs
+USER root
+RUN apt-get update && apt-get install -y git-lfs
+USER user
+
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+# Fetch LFS files (if they are pointers)
+RUN git lfs install
+RUN git lfs pull
 
 # Expose port 7860
 EXPOSE 7860
