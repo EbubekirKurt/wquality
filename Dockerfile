@@ -31,4 +31,4 @@ RUN git lfs pull
 EXPOSE 7860
 
 # Run the application
-CMD ["gunicorn", "-b", "0.0.0.0:7860", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "120", "app:app"]

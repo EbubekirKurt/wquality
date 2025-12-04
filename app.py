@@ -237,7 +237,25 @@ def get_city_forecast(city_name, include_history=True):
         
         forecasts = []
         
-        # 3. Predict for each day (up to 15 to include yesterday)
+        # 3. Predict for each day (Batch Processing)
+        # Collect all inputs first
+        input_batch = []
+        for i in range(min(15, len(dates))):
+            t = temps[i]
+            h = humidities[i]
+            c = clouds[i]
+            c_oktas = (c / 100.0) * 8.0
+            input_batch.append([t, h, c_oktas])
+            
+        # Scale and Predict in Batch
+        if input_batch:
+            input_data = np.array(input_batch)
+            input_scaled = scaler.transform(input_data)
+            predictions = model.predict(input_scaled, verbose=0)
+        else:
+            predictions = []
+
+        # Process results
         for i in range(min(15, len(dates))):
             date_str = dates[i]
             date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -259,11 +277,7 @@ def get_city_forecast(city_name, include_history=True):
             code = codes[i]
             c_oktas = (c / 100.0) * 8.0
             
-            input_data = np.array([[t, h, c_oktas]])
-            input_scaled = scaler.transform(input_data)
-            
-            prediction = model.predict(input_scaled, verbose=0)
-            score = float(prediction[0][0])
+            score = float(predictions[i][0])
             score = round(max(0, min(100, score)), 1)
             
             cat_name, cat_color = get_quality_category(score)
