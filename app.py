@@ -198,7 +198,7 @@ def get_historical_data(lat, lon, start_date, end_date):
         return []
 
 @ttl_cache(ttl=600) # Cache for 10 minutes
-def get_city_forecast(city_name):
+def get_city_forecast(city_name, include_history=True):
     """Fetches weather and predicts quality for a given city."""
     try:
         # 1. Geocoding
@@ -284,7 +284,9 @@ def get_city_forecast(city_name):
             })
             
         # 4. Get Extra Data (History & Activities)
-        history_temps = get_historical_data(lat, lon, dates[0], dates[-1])
+        history_temps = []
+        if include_history:
+            history_temps = get_historical_data(lat, lon, dates[0], dates[-1])
         activities = get_activity_recommendations(forecasts)
         
         return {
@@ -319,7 +321,8 @@ def index():
     other_forecasts = {}
     for city in DEFAULT_CITIES:
         try:
-            data_other, _ = get_city_forecast(city)
+            # Skip history for sidebar cities to speed up loading (avoids timeout)
+            data_other, _ = get_city_forecast(city, include_history=False)
             if data_other and data_other.get('forecasts'):
                 forecasts = data_other['forecasts']
                 # Find "Today" or fallback to first available
@@ -359,7 +362,7 @@ def predict():
     other_forecasts = {}
     for city in DEFAULT_CITIES:
         try:
-            data_other, _ = get_city_forecast(city)
+            data_other, _ = get_city_forecast(city, include_history=False)
             if data_other and data_other.get('forecasts'):
                 forecasts = data_other['forecasts']
                 today_forecast = next((f for f in forecasts if f.get('day') == "Today"), None)
