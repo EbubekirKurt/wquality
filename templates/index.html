@@ -462,6 +462,35 @@
                 justify-content: flex-start;
             }
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1200px) {
+            .dashboard {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .sidebar {
+                width: 100%;
+                order: 2;
+                /* Move sidebars below main content */
+            }
+
+            .main-content {
+                width: 100%;
+                order: 1;
+                /* Main content first */
+            }
+
+            .main-city-name {
+                font-size: 2rem;
+            }
+
+            .forecast-row {
+                justify-content: flex-start;
+                /* Allow scrolling */
+            }
+        }
     </style>
 </head>
 
