@@ -451,12 +451,11 @@
         }
 
         /* Chart Controls */
-        .chart-controls {
+            .chart-controls {
             display: flex;
             justify-content: flex-end;
             gap: 5px;
             margin-bottom: 5px;
-            /* No absolute positioning */
         }
 
         .chart-btn {
@@ -625,7 +624,6 @@
 
             .search-form input {
                 width: 90px;
-                /* Reduced width */
                 padding: 8px 10px;
             }
 
@@ -679,7 +677,6 @@
 <body>
 
     <div class="dashboard">
-        <!-- Left Sidebar -->
         <div class="sidebar">
             {% for city, data in other_forecasts.items() | list | batch(8) | first %}
             <div class="city-card-small" onclick="searchCity('{{ city }}')">
@@ -697,9 +694,7 @@
             {% endfor %}
         </div>
 
-        <!-- Main Content (Center) -->
         <div class="main-content">
-            <!-- Search -->
             <div class="search-container">
                 <form class="search-form" method="POST" action="/predict" id="searchForm">
                     <div style="position: relative;">
@@ -722,7 +717,6 @@
             <div class="error">{{ error }}</div>
             {% endif %}
 
-            <!-- Main City Section -->
             {% if main_forecast %}
             <div class="main-city-section">
                 <div class="main-city-header">
@@ -744,7 +738,6 @@
                     </div>
                 </div>
 
-                <!-- Smart Planner -->
                 {% if activities %}
                 <div class="planner-section">
                     {% for activity, details in activities.items() %}
@@ -759,7 +752,6 @@
                 </div>
                 {% endif %}
 
-                <!-- 14-Day Forecast -->
                 <div class="forecast-container">
                     <button class="scroll-btn scroll-left" onclick="scrollForecast(-1)"><i
                             class="fa-solid fa-chevron-left"></i></button>
@@ -771,7 +763,6 @@
                             <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
                             <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
 
-                            <!-- AI Explanation Button -->
                             <button class="ai-explain-btn"
                                 onclick="showExplanation('{{ day.explanation }}', '{{ day.quality }}', '{{ day.color }}')">
                                 <i class="fas fa-brain"></i> Why?
@@ -788,7 +779,6 @@
                             class="fa-solid fa-chevron-right"></i></button>
                 </div>
 
-                <!-- Explanation Modal -->
                 <dialog id="explanationModal" class="ai-modal">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -802,7 +792,6 @@
                     </div>
                 </dialog>
 
-                <!-- Visuals: Chart & Map -->
                 <div class="visuals-container">
                     <div class="chart-container">
                         <div class="chart-controls">
@@ -820,7 +809,6 @@
             {% endif %}
         </div>
 
-        <!-- Right Sidebar -->
         <div class="sidebar">
             {% set items = other_forecasts.items() | list %}
             {% if items | length > 8 %}
@@ -848,7 +836,6 @@
             document.getElementById('searchForm').submit();
         }
 
-        // Voice Search Logic
         function startVoiceSearch() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert("Voice search not supported in this browser.");
@@ -876,7 +863,6 @@
             recognition.start();
         }
 
-        // Autocomplete Logic
         const cityInput = document.getElementById('cityInput');
         const searchResults = document.getElementById('searchResults');
         let debounceTimer;
@@ -933,7 +919,6 @@
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
 
-                // Call our new API
                 fetch(`/api/forecast-by-coords?lat=${lat}&lon=${lon}`)
                     .then(res => res.json())
                     .then(data => {
@@ -942,9 +927,6 @@
                             alert(data.error);
                             return;
                         }
-                        // Redirect to the city page (or just reload with the city name)
-                        // Since our app is server-side rendered for the main view, 
-                        // we can just submit the form with the city name we found!
                         if (data.city) {
                             document.getElementById('cityInput').value = data.city;
                             document.getElementById('searchForm').submit();
@@ -971,7 +953,6 @@
             }
         }
 
-        // Modal Logic
         function showExplanation(text, score, color) {
             const modal = document.getElementById('explanationModal');
             const modalText = document.getElementById('modalText');
@@ -989,7 +970,6 @@
             modal.close();
         }
 
-        // Close modal when clicking outside
         document.getElementById('explanationModal').addEventListener('click', (e) => {
             const dialogDimensions = e.target.getBoundingClientRect();
             if (
@@ -1004,14 +984,12 @@
     </script>
 
     {% if main_forecast %}
-    <!-- Data passed from Flask to JS via JSON -->
     <script id="main-forecast-data" type="application/json">{{ main_forecast | tojson }}</script>
     <script id="history-data" type="application/json">{{ history | tojson }}</script>
     <script id="other-forecasts-data" type="application/json">{{ other_forecasts | tojson }}</script>
     <script id="main-city-data" type="application/json">{{ main_city | tojson }}</script>
 
     <script>
-        // Apply dynamic styles from data attributes
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-bg-color]').forEach(el => {
                 el.style.backgroundColor = el.dataset.bgColor;
@@ -1020,32 +998,22 @@
                 el.style.color = el.dataset.textColor;
             });
 
-            // Start Auto-Refresh if we have a main city
             if (document.getElementById('main-city-data')) {
                 document.getElementById('liveIndicator').style.display = 'flex';
-                setInterval(() => {
-                    // In a real app, this would fetch new data silently and update the DOM.
-                    // For this demo, we'll just blink the indicator to show it's "Live".
-                    console.log("Auto-refreshing data...");
-                }, 300000); // 5 minutes
             }
         });
 
-        // --- Data Loading ---
         const mainForecast = JSON.parse(document.getElementById('main-forecast-data').textContent);
-        const historyData = JSON.parse(document.getElementById('history-data').textContent); // Now contains list of {year, temp}
+        const historyData = JSON.parse(document.getElementById('history-data').textContent);
         const otherForecasts = JSON.parse(document.getElementById('other-forecasts-data').textContent);
         const mainCity = JSON.parse(document.getElementById('main-city-data').textContent);
 
-        // --- Chart Logic ---
         const ctx = document.getElementById('trendChart').getContext('2d');
 
-        // Forecast Data
         const forecastLabels = mainForecast.map(d => d.day);
         const forecastData = mainForecast.map(d => d.quality);
         const forecastColors = mainForecast.map(d => d.color);
 
-        // History Data
         const historyLabels = historyData.map(d => d.year);
         const historyTemps = historyData.map(d => d.temp);
 
@@ -1118,14 +1086,12 @@
             initChart(mode);
         }
 
-        // Initialize with Forecast
         initChart('forecast');
 
-        // --- Map Logic ---
         const mainData = mainForecast[0];
         const mainLat = mainData.lat;
         const mainLon = mainData.lon;
-        const mainCityName = "{{ main_city }}"; // Fallback if JSON fails, but we use JS var
+        const mainCityName = "{{ main_city }}";
         const mainQuality = mainData.quality;
         const mainColor = mainData.color;
 
@@ -1150,7 +1116,6 @@
 
         addMarker(mainLat, mainLon, mainCity, mainQuality, mainColor);
 
-        // Add markers for other cities
         Object.entries(otherForecasts).forEach(([city, data]) => {
             addMarker(data.lat, data.lon, city, data.quality, data.color);
         });
