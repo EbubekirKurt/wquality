@@ -4,14 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>AtmosAI - Weather Quality Forecast</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.ico">
+    <!-- Resource hints for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Lazy load heavy libraries - only load when needed -->
+    <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
     <style>
         :root {
             --primary-bg: #e0e5ec;
@@ -20,15 +27,162 @@
             --text-color: #2d3436;
             --accent-color: #0984e3;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.9);
+            --glass-border: 1px solid rgba(148, 163, 184, 0.1);
+            --text-color: #f1f5f9;
+            --accent-color: #60a5fa;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+        
+        [data-theme="dark"] .modal-content {
+            background: rgba(30, 41, 59, 0.95);
+        }
+        
+        [data-theme="dark"] .search-results {
+            background: rgba(30, 41, 59, 0.95);
+        }
+        
+        [data-theme="dark"] .forecast-card-main {
+            background: rgba(30, 41, 59, 0.7);
+        }
+        
+        [data-theme="dark"] .planner-card {
+            background: rgba(30, 41, 59, 0.7);
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--bg-gradient);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .navbar-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .navbar-link:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        .navbar-link.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-selector select {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .language-selector select:hover {
+            background: var(--card-bg);
+            border-color: var(--accent-color);
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            color: #fdcb6e;
+        }
+
+        .main-content-wrapper {
+            flex: 1;
+            width: 100%;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -147,13 +301,15 @@
             top: 110%;
             left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
             border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             overflow: hidden;
             display: none;
             flex-direction: column;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: var(--glass-border);
+            z-index: 1000;
         }
 
         .search-result-item {
@@ -206,20 +362,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .comparison-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .compare-select {
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            background: rgba(255, 255, 255, 0.8);
-            font-family: inherit;
-            outline: none;
-        }
 
         /* Smart Planner */
         .planner-section {
@@ -231,13 +373,13 @@
 
         .planner-card {
             flex: 1;
-            background: rgba(255, 255, 255, 0.6);
+            background: var(--card-bg);
             padding: 1rem;
             border-radius: 15px;
             display: flex;
             align-items: center;
             gap: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: var(--glass-border);
         }
 
         .planner-icon {
@@ -256,7 +398,7 @@
         .planner-info p {
             margin: 5px 0 0 0;
             font-weight: 600;
-            color: #2d3436;
+            color: var(--text-color);
         }
 
         .forecast-row {
@@ -271,24 +413,26 @@
         .forecast-card-main {
             flex: 1;
             min-width: 140px;
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--card-bg);
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
             transition: transform 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: var(--glass-border);
             position: relative;
         }
 
         .forecast-card-main:hover {
             transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--card-bg);
+            opacity: 0.95;
         }
 
         .day-name {
             font-weight: 600;
             margin-bottom: 10px;
-            color: #636e72;
+            color: var(--text-color);
+            opacity: 0.9;
         }
 
         .weather-icon {
@@ -315,16 +459,18 @@
 
         .explanation {
             font-size: 0.75rem;
-            color: #636e72;
+            color: var(--text-color);
+            opacity: 0.7;
             font-style: italic;
             margin-top: 5px;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-top: 1px solid var(--glass-border);
             padding-top: 5px;
         }
 
         .details {
             font-size: 0.85rem;
-            color: #636e72;
+            color: var(--text-color);
+            opacity: 0.8;
         }
 
         /* AI Explain Button */
@@ -363,10 +509,11 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 20px;
             text-align: center;
+            color: var(--text-color);
         }
 
         .modal-header {
@@ -386,10 +533,11 @@
 
         .close-btn {
             background: transparent;
-            color: #636e72;
+            color: var(--text-color);
             font-size: 1.5rem;
             padding: 0;
             width: auto;
+            opacity: 0.7;
         }
 
         .close-btn:hover {
@@ -415,7 +563,7 @@
         #modalText {
             font-size: 1rem;
             line-height: 1.5;
-            color: #2d3436;
+            color: var(--text-color);
         }
 
         /* Chart & Map Container */
@@ -431,11 +579,12 @@
             position: relative;
             height: 350px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.4);
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 1rem;
             box-sizing: border-box;
             border: var(--glass-border);
+            min-height: 350px;
         }
 
         .chart-container {
@@ -446,8 +595,10 @@
         #map {
             height: 100%;
             width: 100%;
+            min-height: 300px;
             border-radius: 10px;
             z-index: 1;
+            background: var(--card-bg);
         }
 
         /* Chart Controls */
@@ -459,13 +610,19 @@
         }
 
         .chart-btn {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            border: var(--glass-border);
             padding: 4px 10px;
             font-size: 0.75rem;
             border-radius: 15px;
             color: var(--text-color);
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .chart-btn:hover {
+            background: var(--accent-color);
+            color: white;
         }
 
         .chart-btn.active {
@@ -528,10 +685,11 @@
             gap: 8px;
             font-weight: 600;
             color: #00b894;
-            background: rgba(255, 255, 255, 0.6);
+            background: var(--card-bg);
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.9rem;
+            border: var(--glass-border);
         }
 
         .pulse-dot {
@@ -562,8 +720,8 @@
 
         /* Scroll Buttons */
         .scroll-btn {
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
+            background: var(--card-bg);
+            border: var(--glass-border);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -571,7 +729,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -581,7 +739,8 @@
         }
 
         .scroll-btn:hover {
-            background: white;
+            background: var(--accent-color);
+            color: white;
             transform: translateY(-50%) scale(1.1);
         }
 
@@ -675,23 +834,48 @@
 </head>
 
 <body>
-
-    <div class="dashboard">
-        <div class="sidebar">
-            {% for city, data in other_forecasts.items() | list | batch(8) | first %}
-            <div class="city-card-small" onclick="searchCity('{{ city }}')">
-                <div class="city-info">
-                    <h3>{{ city }}</h3>
-                    <div class="details">
-                        <i class="fas {{ data.icon }}"></i> {{ data.category }}
+    <!-- Top Navbar -->
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-cloud-sun"></i>
+                <span>AtmosAI</span>
+            </a>
+            <div class="navbar-links">
+                <a href="/" class="navbar-link active" data-i18n="nav_home">
+                    <i class="fas fa-home"></i> <span>Home</span>
+                </a>
+                <a href="/about" class="navbar-link" data-i18n="nav_how_it_works">
+                    <i class="fas fa-info-circle"></i> <span>How It Works</span>
+                </a>
+                <a href="/api-docs" class="navbar-link" data-i18n="nav_api_docs">
+                    <i class="fas fa-code"></i> <span>API Docs</span>
+                </a>
+                <a href="/compare" class="navbar-link" data-i18n="nav_compare">
+                    <i class="fas fa-balance-scale"></i> <span>Compare</span>
+                </a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="language-selector">
+                    <select id="languageSelect" onchange="changeLanguage(this.value)">
+                        <option value="en">🇺🇸 EN</option>
+                        <option value="tr">🇹🇷 TR</option>
+                        <option value="fr">🇫🇷 FR</option>
+                        <option value="de">🇩🇪 DE</option>
+                        <option value="kr">🇰🇷 KR</option>
+                    </select>
                     </div>
                 </div>
-                <div style="text-align: right;">
-                    <div class="city-temp">{{ data.temp }}°C</div>
-                    <div class="quality-badge" data-bg-color="{{ data.color }}">Q: {{ data.quality }}</div>
                 </div>
+    </nav>
+
+    <div class="main-content-wrapper">
+        <div class="dashboard">
+        <div class="sidebar" id="sidebar-left">
+            <div class="city-card-small" style="text-align: center; padding: 1rem;">
+                <div class="details" data-i18n="loading_cities">Loading cities...</div>
             </div>
-            {% endfor %}
         </div>
 
         <div class="main-content">
@@ -699,90 +883,30 @@
                 <form class="search-form" method="POST" action="/predict" id="searchForm">
                     <div style="position: relative;">
                         <input type="text" id="cityInput" name="city" placeholder="Search city..." autocomplete="off"
-                            required>
+                            required data-i18n-placeholder="search_placeholder">
                         <div id="searchResults" class="search-results"></div>
                     </div>
-                    <button type="button" class="mic-btn" onclick="startVoiceSearch()" title="Voice Search"><i
+                    <button type="button" class="mic-btn" onclick="startVoiceSearch()" data-i18n-title="voice_search" title="Voice Search"><i
                             class="fas fa-microphone"></i></button>
-                    <button type="button" class="mic-btn" onclick="locateMe()" title="Use My Location"><i
+                    <button type="button" class="mic-btn" onclick="locateMe()" data-i18n-title="use_location" title="Use My Location"><i
                             class="fas fa-location-crosshairs"></i></button>
-                    <button type="submit">Search</button>
+                    <button type="submit" data-i18n="search_button">Search</button>
                 </form>
                 <div class="live-indicator" id="liveIndicator" style="display: none;">
-                    <span class="pulse-dot"></span> Live
+                    <span class="pulse-dot"></span> <span data-i18n="live">Live</span>
                 </div>
             </div>
 
-            {% if error %}
-            <div class="error">{{ error }}</div>
-            {% endif %}
+            <div id="errorMessage" class="error" style="display: none;"></div>
 
-            {% if main_forecast %}
-            <div class="main-city-section">
-                <div class="main-city-header">
-                    <div class="header-left">
-                        <h1 class="main-city-name">{{ main_city }}</h1>
-                        <p>14-Day Weather Quality Forecast</p>
-                    </div>
-                    <div class="comparison-controls">
-                        <label>Compare with:</label>
-                        <select id="compareSelect" class="compare-select" onchange="compareCity(this.value)">
-                            <option value="">Select City...</option>
-                            <option value="New York">New York</option>
-                            <option value="Tokyo">Tokyo</option>
-                            <option value="London">London</option>
-                            <option value="Paris">Paris</option>
-                            <option value="Berlin">Berlin</option>
-                            <option value="Sydney">Sydney</option>
-                        </select>
-                    </div>
-                </div>
-
-                {% if activities %}
-                <div class="planner-section">
-                    {% for activity, details in activities.items() %}
-                    <div class="planner-card">
-                        <div class="planner-icon"><i class="fas {{ details.icon }}"></i></div>
-                        <div class="planner-info">
-                            <h4>Best for {{ activity }}</h4>
-                            <p>{{ details.day }}</p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <div class="forecast-container">
-                    <button class="scroll-btn scroll-left" onclick="scrollForecast(-1)"><i
-                            class="fa-solid fa-chevron-left"></i></button>
-                    <div class="forecast-row" id="forecastRow">
-                        {% for day in main_forecast %}
-                        <div class="forecast-card-main" style="border-bottom: 4px solid {{ day.color }}">
-                            <div class="day-name">{{ day.day }}</div>
-                            <div class="weather-icon"><i class="fas {{ day.icon }}"></i></div>
-                            <div class="quality-score-main" data-text-color="{{ day.color }}">{{ day.quality }}</div>
-                            <div class="quality-category" data-bg-color="{{ day.color }}">{{ day.category }}</div>
-
-                            <button class="ai-explain-btn"
-                                onclick="showExplanation('{{ day.explanation }}', '{{ day.quality }}', '{{ day.color }}')">
-                                <i class="fas fa-brain"></i> Why?
-                            </button>
-
-                            <div class="details">
-                                <div>{{ day.temp }}°C</div>
-                                <div>Hum: {{ day.humidity }}%</div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <button class="scroll-btn scroll-right" onclick="scrollForecast(1)"><i
-                            class="fa-solid fa-chevron-right"></i></button>
+            <div id="mainCitySection" class="main-city-section" style="display: none;">
+                <!-- Content will be loaded via JavaScript -->
                 </div>
 
                 <dialog id="explanationModal" class="ai-modal">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h2><i class="fas fa-robot"></i> AI Analysis</h2>
+                        <h2><i class="fas fa-robot"></i> <span data-i18n="ai_analysis">AI Analysis</span></h2>
                             <button onclick="closeModal()" class="close-btn">&times;</button>
                         </div>
                         <div class="modal-body">
@@ -791,42 +915,10 @@
                         </div>
                     </div>
                 </dialog>
-
-                <div class="visuals-container">
-                    <div class="chart-container">
-                        <div class="chart-controls">
-                            <button class="chart-btn active" onclick="updateChart('forecast')"
-                                id="btn-forecast">Forecast</button>
-                            <button class="chart-btn" onclick="updateChart('history')" id="btn-history">History</button>
-                        </div>
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                    <div class="map-container">
-                        <div id="map"></div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
 
-        <div class="sidebar">
-            {% set items = other_forecasts.items() | list %}
-            {% if items | length > 8 %}
-            {% for city, data in items[8:] %}
-            <div class="city-card-small" onclick="searchCity('{{ city }}')">
-                <div class="city-info">
-                    <h3>{{ city }}</h3>
-                    <div class="details">
-                        <i class="fas {{ data.icon }}"></i> {{ data.category }}
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="city-temp">{{ data.temp }}°C</div>
-                    <div class="quality-badge" data-bg-color="{{ data.color }}">Q: {{ data.quality }}</div>
-                </div>
-            </div>
-            {% endfor %}
-            {% endif %}
+        <div class="sidebar" id="sidebar-right">
+            <!-- Will be populated by JavaScript -->
         </div>
     </div>
 
@@ -835,6 +927,7 @@
             document.getElementById('cityInput').value = cityName;
             document.getElementById('searchForm').submit();
         }
+
 
         function startVoiceSearch() {
             if (!('webkitSpeechRecognition' in window)) {
@@ -983,69 +1076,586 @@
         });
     </script>
 
-    {% if main_forecast %}
-    <script id="main-forecast-data" type="application/json">{{ main_forecast | tojson }}</script>
-    <script id="history-data" type="application/json">{{ history | tojson }}</script>
-    <script id="other-forecasts-data" type="application/json">{{ other_forecasts | tojson }}</script>
-    <script id="main-city-data" type="application/json">{{ main_city | tojson }}</script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('[data-bg-color]').forEach(el => {
-                el.style.backgroundColor = el.dataset.bgColor;
-            });
-            document.querySelectorAll('[data-text-color]').forEach(el => {
-                el.style.color = el.dataset.textColor;
-            });
+        // Internationalization (i18n) System
+        let currentLocale = localStorage.getItem('locale') || 'en';
+        let translations = {};
 
-            if (document.getElementById('main-city-data')) {
-                document.getElementById('liveIndicator').style.display = 'flex';
+        async function loadLocale(lang) {
+            try {
+                const response = await fetch(`/api/locale/${lang}`);
+                translations = await response.json();
+                currentLocale = lang;
+                localStorage.setItem('locale', lang);
+                applyTranslations();
+            } catch (err) {
+                console.error('Error loading locale:', err);
             }
-        });
+        }
 
-        const mainForecast = JSON.parse(document.getElementById('main-forecast-data').textContent);
-        const historyData = JSON.parse(document.getElementById('history-data').textContent);
-        const otherForecasts = JSON.parse(document.getElementById('other-forecasts-data').textContent);
-        const mainCity = JSON.parse(document.getElementById('main-city-data').textContent);
+        // Translation helper functions
+        function translateDay(dayName) {
+            const dayMap = {
+                'Today': 'day_today',
+                'Tomorrow': 'day_tomorrow',
+                'Yesterday': 'day_yesterday',
+                'Monday': 'day_monday',
+                'Tuesday': 'day_tuesday',
+                'Wednesday': 'day_wednesday',
+                'Thursday': 'day_thursday',
+                'Friday': 'day_friday',
+                'Saturday': 'day_saturday',
+                'Sunday': 'day_sunday'
+            };
+            const key = dayMap[dayName];
+            return key && translations[key] ? translations[key] : dayName;
+        }
 
-        const ctx = document.getElementById('trendChart').getContext('2d');
+        function translateCategory(category) {
+            const categoryMap = {
+                'Excellent': 'quality_excellent',
+                'Good': 'quality_good',
+                'Moderate': 'quality_moderate',
+                'Poor': 'quality_poor',
+                'Terrible': 'quality_terrible'
+            };
+            const key = categoryMap[category];
+            return key && translations[key] ? translations[key] : category;
+        }
 
-        const forecastLabels = mainForecast.map(d => d.day);
-        const forecastData = mainForecast.map(d => d.quality);
-        const forecastColors = mainForecast.map(d => d.color);
+        function applyTranslations() {
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[key]) {
+                    const span = el.querySelector('span');
+                    if (span) {
+                        span.textContent = translations[key];
+                    } else {
+                        el.textContent = translations[key];
+                    }
+                }
+            });
 
-        const historyLabels = historyData.map(d => d.year);
-        const historyTemps = historyData.map(d => d.temp);
+            // Update specific elements
+            const searchInput = document.getElementById('cityInput');
+            if (searchInput && translations.search_placeholder) {
+                searchInput.placeholder = translations.search_placeholder;
+            }
 
-        let trendChart;
+            const searchButton = document.querySelector('button[type="submit"]');
+            if (searchButton && translations.search_button) {
+                searchButton.textContent = translations.search_button;
+            }
 
-        function initChart(mode) {
+            // Update title attributes
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (translations[key]) {
+                    el.title = translations[key];
+                }
+            });
+
+            // Update language selector
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = currentLocale;
+            }
+
+            // Update quality category elements
+            document.querySelectorAll('.quality-category').forEach(el => {
+                const originalText = el.textContent.trim();
+                const translated = translateCategory(originalText);
+                if (translated !== originalText) {
+                    el.textContent = translated;
+                }
+            });
+
+            // Re-render forecast if already loaded
+            if (mainForecast && mainForecast.length > 0) {
+                const mainCitySection = document.getElementById('mainCitySection');
+                if (mainCitySection && mainCitySection.querySelector('.main-city-name')) {
+                    const cityName = mainCitySection.querySelector('.main-city-name').textContent;
+                    // Re-fetch and re-render with translations
+                    fetch(`/api/forecast?city=${encodeURIComponent(cityName)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.error) {
+                                renderMainForecast(data.city, data.forecast);
+                            }
+                        });
+                }
+            }
+        }
+
+        function changeLanguage(lang) {
+            loadLocale(lang);
+        }
+
+        // Load initial locale
+        loadLocale(currentLocale);
+
+        // Dark Mode Toggle
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
+        // Theme toggle button
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Get city from URL or default to Istanbul
+        const urlParams = new URLSearchParams(window.location.search);
+        const mainCity = urlParams.get('city') || 'Istanbul';
+        
+        // Load main city forecast immediately on page load
+        function loadMainCityForecast() {
+            const loadingSection = document.getElementById('mainCitySection');
+            if (loadingSection) {
+                const loadingText = translations.loading_forecast || 'Loading forecast...';
+                loadingSection.innerHTML = `<div style="text-align: center; padding: 2rem;"><div class="details">${loadingText}</div></div>`;
+                loadingSection.style.display = 'block';
+            }
+            
+            fetch(`/api/forecast?city=${encodeURIComponent(mainCity)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        showError(data.error);
+                        return;
+                    }
+                    
+                    renderMainForecast(data.city, data.forecast);
+                    const liveIndicator = document.getElementById('liveIndicator');
+                    if (liveIndicator) {
+                        liveIndicator.style.display = 'flex';
+                        const liveText = liveIndicator.querySelector('.pulse-dot').nextSibling;
+                        if (liveText && translations.live) {
+                            liveText.textContent = ' ' + translations.live;
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading forecast:', err);
+                    const errorMsg = translations.error_loading || 'Error loading forecast. Please try again.';
+                    showError(errorMsg);
+                });
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        function renderMainForecast(city, forecastData) {
+            const mainCitySection = document.getElementById('mainCitySection');
+            if (!mainCitySection || !forecastData) return;
+            
+            const forecasts = forecastData.forecasts || [];
+            const activities = forecastData.activities || {};
+            
+            // Build HTML
+            let html = `
+                <div class="main-city-header">
+                    <div class="header-left">
+                        <h1 class="main-city-name">${city}</h1>
+                        <p>${translations.forecast_title || '14-Day Weather Quality Forecast'}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Activities section
+            if (Object.keys(activities).length > 0) {
+                html += '<div class="planner-section">';
+                for (const [activity, details] of Object.entries(activities)) {
+                    // Translate activity name
+                    const activityKey = `activity_${activity.toLowerCase()}`;
+                    const translatedActivity = translations[activityKey] || activity;
+                    
+                    // Format the activity text based on locale
+                    let activityText;
+                    if (currentLocale === 'tr') {
+                        // Turkish: "Fotoğraf çekmek için en iyi gün"
+                        activityText = `${translatedActivity} ${translations.best_for || 'en iyi gün'}`;
+                    } else {
+                        // Other languages: "Best day for photography"
+                        activityText = `${translations.best_for || 'Best day for'} ${translatedActivity}`;
+                    }
+                    
+                    html += `
+                        <div class="planner-card">
+                            <div class="planner-icon"><i class="fas ${details.icon}"></i></div>
+                            <div class="planner-info">
+                                <h4>${activityText}</h4>
+                                <p>${details.day === 'Belki haftaya?' ? (translations.maybe_next_week || 'Belki haftaya?') : translateDay(details.day)}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+            }
+            
+            // Forecast cards
+            html += `
+                <div class="forecast-container">
+                    <button class="scroll-btn scroll-left" onclick="scrollForecast(-1)">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="forecast-row" id="forecastRow">
+            `;
+            
+            forecasts.forEach(day => {
+                const translatedDay = translateDay(day.day);
+                const translatedCategory = translateCategory(day.category);
+                const humidityLabel = translations.humidity || 'Hum';
+                
+                html += `
+                    <div class="forecast-card-main" style="border-bottom: 4px solid ${day.color}">
+                        <div class="day-name">${translatedDay}</div>
+                        <div class="weather-icon"><i class="fas ${day.icon}"></i></div>
+                        <div class="quality-score-main" style="color: ${day.color}">${day.quality}</div>
+                        <div class="quality-category" style="background-color: ${day.color}">${translatedCategory}</div>
+                        <button class="ai-explain-btn" onclick="showExplanation('${day.explanation.replace(/'/g, "\\'")}', '${day.quality}', '${day.color}')">
+                            <i class="fas fa-brain"></i> ${translations.why || 'Why?'}
+                        </button>
+                        <div class="details">
+                            <div>${day.temp}°C</div>
+                            <div>${humidityLabel}: ${day.humidity}%</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <button class="scroll-btn scroll-right" onclick="scrollForecast(1)">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Chart and Map container
+            html += `
+                <div class="visuals-container">
+                    <div class="chart-container">
+                        <div class="chart-controls">
+                            <button class="chart-btn active" onclick="updateChart('forecast')" id="btn-forecast">${translations.forecast || 'Forecast'}</button>
+                            <button class="chart-btn" onclick="updateChart('history')" id="btn-history">${translations.history || 'History'}</button>
+                        </div>
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                    <div class="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            `;
+            
+            mainCitySection.innerHTML = html;
+            mainCitySection.style.display = 'block';
+            
+            // Initialize chart and map lazily (after a short delay to prevent blocking)
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    initializeChart(forecasts);
+                }, 100);
+                
+                // Map will be loaded when it becomes visible - wait for DOM to be ready
+                setTimeout(() => {
+                    const mapDiv = document.getElementById('map');
+                    if (mapDiv && forecasts[0]) {
+                        lazyLoadMap(forecasts[0], city);
+                    }
+                }, 200);
+            });
+        }
+        
+        let mainForecast = [];
+        let historyData = [];
+        let historyDataLoaded = false;
+        let trendChart = null;
+        let mapInstance = null;
+
+        // Lazy load Chart.js
+        let chartJsLoaded = false;
+        function loadChartJs() {
+            if (chartJsLoaded || window.Chart) {
+                chartJsLoaded = true;
+                return Promise.resolve();
+            }
+            
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                script.async = true;
+                script.onload = () => {
+                    chartJsLoaded = true;
+                    resolve();
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        function initializeChart(forecasts) {
+            mainForecast = forecasts;
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) return;
+            
+            // Lazy load Chart.js if not already loaded
+            loadChartJs().then(() => {
+                const ctx = canvas.getContext('2d');
+                const forecastLabels = forecasts.map(d => translateDay(d.day));
+                const forecastData = forecasts.map(d => d.quality);
+                const forecastColors = forecasts.map(d => d.color);
+                const qualityScoreLabel = translations.quality_score || 'Quality Score';
+                const chartTitle = translations.chart_title || '14-Day Quality Forecast';
+
             if (trendChart) {
                 trendChart.destroy();
             }
 
+                trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: forecastLabels,
+                    datasets: [{
+                        label: qualityScoreLabel,
+                        data: forecastData,
+                        borderColor: '#0984e3',
+                        backgroundColor: 'rgba(9, 132, 227, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: forecastColors,
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: chartTitle, font: { size: 16 } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: qualityScoreLabel }
+                        }
+                    }
+                }
+                });
+            }).catch(err => {
+                console.error('Error loading Chart.js:', err);
+            });
+        }
+
+        // Lazy load Leaflet
+        let leafletLoaded = false;
+        function loadLeaflet() {
+            if (leafletLoaded || window.L) {
+                leafletLoaded = true;
+                return Promise.resolve();
+            }
+            
+            return new Promise((resolve, reject) => {
+                // Load CSS first
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                link.crossOrigin = '';
+                document.head.appendChild(link);
+                
+                // Then load JS
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                script.crossOrigin = '';
+                script.async = true;
+                script.onload = () => {
+                    leafletLoaded = true;
+                    resolve();
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Lazy load map when it becomes visible
+        function lazyLoadMap(firstDay, cityName) {
+            if (!firstDay) return;
+            
+            const mapDiv = document.getElementById('map');
+            if (!mapDiv) {
+                // Retry if map div not ready yet
+                setTimeout(() => lazyLoadMap(firstDay, cityName), 100);
+                return;
+            }
+            
+            // Use Intersection Observer to load map when visible
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && !mapInstance) {
+                            observer.disconnect();
+                            initializeMap(firstDay, cityName);
+                        }
+                    });
+                }, { rootMargin: '100px' });
+                
+                observer.observe(mapDiv);
+                
+                // Fallback: if not visible after 2 seconds, load anyway
+                setTimeout(() => {
+                    if (!mapInstance && mapDiv) {
+                        observer.disconnect();
+                        initializeMap(firstDay, cityName);
+                    }
+                }, 2000);
+            } else {
+                // Fallback: load after a delay
+                setTimeout(() => initializeMap(firstDay, cityName), 500);
+            }
+        }
+
+        function initializeMap(firstDay, cityName) {
+            if (!firstDay || mapInstance) return;
+            
+            const mapDiv = document.getElementById('map');
+            if (!mapDiv) {
+                console.warn('Map div not found');
+                return;
+            }
+            
+            // Check if map div has dimensions
+            const rect = mapDiv.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                console.warn('Map div has no dimensions, retrying...');
+                setTimeout(() => initializeMap(firstDay, cityName), 300);
+                return;
+            }
+            
+            // Lazy load Leaflet if not already loaded
+            loadLeaflet().then(() => {
+                if (!window.L) {
+                    console.error('Leaflet not loaded');
+                    return;
+                }
+                
+                const mainLat = firstDay.lat;
+                const mainLon = firstDay.lon;
+                const mainQuality = firstDay.quality;
+                const mainColor = firstDay.color;
+
+                try {
+                    mapInstance = L.map('map', {
+                        preferCanvas: true
+                    }).setView([mainLat, mainLon], 4);
+                    
+                    // Always use light tiles (white background)
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                        subdomains: 'abcd',
+                        maxZoom: 19
+                    }).addTo(mapInstance);
+
+                    // Invalidate size to ensure proper rendering
+                    setTimeout(() => {
+                        if (mapInstance) {
+                            mapInstance.invalidateSize();
+                        }
+                    }, 100);
+
+                    addMarker(mainLat, mainLon, cityName, mainQuality, mainColor);
+                } catch (err) {
+                    console.error('Error initializing map:', err);
+                }
+            }).catch(err => {
+                console.error('Error loading Leaflet:', err);
+            });
+        }
+
+        function addMarker(lat, lon, city, quality, color) {
+            if (!mapInstance) return;
+            L.circleMarker([lat, lon], {
+                radius: 10,
+                fillColor: color,
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(mapInstance)
+                .bindPopup(`<b>${city}</b><br>Quality: ${quality}`);
+        }
+
+        function updateChart(mode) {
+            const btnForecast = document.getElementById('btn-forecast');
+            const btnHistory = document.getElementById('btn-history');
+            if (btnForecast) btnForecast.classList.toggle('active', mode === 'forecast');
+            if (btnHistory) btnHistory.classList.toggle('active', mode === 'history');
+
+            if (mode === 'history' && !historyDataLoaded) {
+                loadHistoryData();
+            } else {
+                initChart(mode);
+            }
+        }
+
+        function initChart(mode) {
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) return;
+            
+            // Ensure Chart.js is loaded
+            loadChartJs().then(() => {
+                const ctx = canvas.getContext('2d');
             let labels, datasets, title;
 
             if (mode === 'forecast') {
-                labels = forecastLabels;
-                title = '14-Day Quality Forecast';
+                    labels = mainForecast.map(d => translateDay(d.day));
+                title = translations.chart_title || '14-Day Quality Forecast';
                 datasets = [{
-                    label: 'Quality Score',
-                    data: forecastData,
+                    label: translations.quality_score || 'Quality Score',
+                        data: mainForecast.map(d => d.quality),
                     borderColor: '#0984e3',
                     backgroundColor: 'rgba(9, 132, 227, 0.1)',
                     borderWidth: 3,
-                    pointBackgroundColor: forecastColors,
+                        pointBackgroundColor: mainForecast.map(d => d.color),
                     pointRadius: 5,
                     fill: true,
                     tension: 0.4
                 }];
             } else {
-                labels = historyLabels;
-                title = 'Climate Trend (Last 5 Years)';
+                    labels = historyData.map(d => d.year);
+                title = translations.climate_trend || 'Climate Trend (Last 5 Years)';
                 datasets = [{
-                    label: 'Avg Temperature (°C)',
-                    data: historyTemps,
+                    label: translations.temperature || 'Temperature (°C)',
+                        data: historyData.map(d => d.temp),
                     borderColor: '#ff7675',
                     backgroundColor: 'rgba(255, 118, 117, 0.2)',
                     borderWidth: 2,
@@ -1053,6 +1663,10 @@
                     fill: true,
                     tension: 0.3
                 }];
+            }
+
+                if (trendChart) {
+                    trendChart.destroy();
             }
 
             trendChart = new Chart(ctx, {
@@ -1071,56 +1685,223 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: mode === 'forecast' ? 'Quality Score' : 'Temperature (°C)' }
+                            title: { display: true, text: mode === 'forecast' ? (translations.quality_score || 'Quality Score') : (translations.temperature || 'Temperature (°C)') }
                         }
                     }
                 }
+                });
+            }).catch(err => {
+                console.error('Error loading Chart.js:', err);
             });
         }
 
-        function updateChart(mode) {
-            // Update Buttons
-            document.getElementById('btn-forecast').classList.toggle('active', mode === 'forecast');
-            document.getElementById('btn-history').classList.toggle('active', mode === 'history');
-
-            initChart(mode);
+        function loadHistoryData() {
+            fetch(`/api/history?city=${encodeURIComponent(mainCity)}`)
+                .then(res => res.json())
+                .then(data => {
+                    historyData = data.history || [];
+                    historyDataLoaded = true;
+                    initChart('history');
+                })
+                .catch(err => {
+                    console.error('Error loading history:', err);
+                    historyData = [];
+                    historyDataLoaded = true;
+                    initChart('history');
+                });
         }
 
-        initChart('forecast');
+        // Load other cities asynchronously (with localStorage cache)
+        let citiesLoading = false;
+        let citiesLoaded = false;
+        const CITIES_CACHE_KEY = 'weather_other_cities';
+        const CITIES_CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
+        
+        function loadOtherCities() {
+            // Prevent multiple simultaneous requests
+            if (citiesLoading) {
+                return;
+            }
+            
+            // Check localStorage cache first
+            try {
+                const cached = localStorage.getItem(CITIES_CACHE_KEY);
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    const age = Date.now() - timestamp;
+                    if (age < CITIES_CACHE_TTL && data) {
+                        console.log('Cities loaded from localStorage cache');
+                        renderCities(data);
+                        citiesLoaded = true;
+                        // Still fetch in background to update cache
+                        fetchCities(true);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Error reading localStorage cache:', e);
+            }
+            
+            // No valid cache, fetch from server
+            fetchCities(false);
+        }
+        
+        function fetchCities(silent = false) {
+            if (citiesLoading && !silent) {
+                return;
+            }
+            
+            citiesLoading = true;
+            
+            // Get ETag from localStorage if available
+            const cached = localStorage.getItem(CITIES_CACHE_KEY);
+            let ifNoneMatch = null;
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    ifNoneMatch = parsed.etag;
+                } catch (e) {
+                    // Ignore
+                }
+            }
+            
+            const headers = {};
+            if (ifNoneMatch) {
+                headers['If-None-Match'] = ifNoneMatch;
+            }
+            
+            fetch('/api/other-cities', {
+                method: 'GET',
+                cache: 'default',
+                headers: headers
+            })
+                .then(res => {
+                    // Handle 304 Not Modified
+                    if (res.status === 304) {
+                        console.log('Cities not modified (304), using cache');
+                        const cached = localStorage.getItem(CITIES_CACHE_KEY);
+                        if (cached) {
+                            const { data } = JSON.parse(cached);
+                            renderCities(data);
+                            citiesLoaded = true;
+                            citiesLoading = false;
+                            return null;
+                        }
+                    }
+                    
+                    const etag = res.headers.get('ETag');
+                    return res.json().then(data => ({ data, etag }));
+                })
+                .then(result => {
+                    if (!result) return; // 304 handled above
+                    
+                    const { data, etag } = result;
+                    
+                    // Save to localStorage
+                    try {
+                        localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({
+                            data: data,
+                            timestamp: Date.now(),
+                            etag: etag
+                        }));
+                    } catch (e) {
+                        console.warn('Error saving to localStorage:', e);
+                    }
+                    
+                    renderCities(data);
+                    citiesLoaded = true;
+                    citiesLoading = false;
+                })
+                .catch(err => {
+                    console.error('Error loading other cities:', err);
+                    const sidebarLeft = document.getElementById('sidebar-left');
+                    if (sidebarLeft && !citiesLoaded) {
+                        sidebarLeft.innerHTML = 
+                            '<div class="city-card-small" style="text-align: center; padding: 1rem;"><div class="details">Error loading cities</div></div>';
+                    }
+                    citiesLoading = false;
+                });
+        }
+        
+        function renderCities(data) {
+            const sidebarLeft = document.getElementById('sidebar-left');
+            const sidebarRight = document.getElementById('sidebar-right');
+            if (!sidebarLeft || !sidebarRight) return;
+            
+            sidebarLeft.innerHTML = '';
+            sidebarRight.innerHTML = '';
 
-        const mainData = mainForecast[0];
-        const mainLat = mainData.lat;
-        const mainLon = mainData.lon;
-        const mainCityName = "{{ main_city }}";
-        const mainQuality = mainData.quality;
-        const mainColor = mainData.color;
+            const cities = Object.entries(data);
+            const midPoint = Math.ceil(cities.length / 2);
 
-        const map = L.map('map').setView([mainLat, mainLon], 4);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
+            cities.slice(0, midPoint).forEach(([city, cityData]) => {
+                const card = createCityCard(city, cityData);
+                sidebarLeft.appendChild(card);
+                addMarker(cityData.lat, cityData.lon, city, cityData.quality, cityData.color);
+            });
 
-        function addMarker(lat, lon, city, quality, color) {
-            L.circleMarker([lat, lon], {
-                radius: 10,
-                fillColor: color,
-                color: "#fff",
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            }).addTo(map)
-                .bindPopup(`<b>${city}</b><br>Quality: ${quality}`);
+            cities.slice(midPoint).forEach(([city, cityData]) => {
+                const card = createCityCard(city, cityData);
+                sidebarRight.appendChild(card);
+                addMarker(cityData.lat, cityData.lon, city, cityData.quality, cityData.color);
+            });
         }
 
-        addMarker(mainLat, mainLon, mainCity, mainQuality, mainColor);
+        function createCityCard(city, data) {
+            const card = document.createElement('div');
+            card.className = 'city-card-small';
+            card.onclick = () => searchCity(city);
+            const translatedCategory = translateCategory(data.category);
+            card.innerHTML = `
+                <div class="city-info">
+                    <h3>${city}</h3>
+                    <div class="details">
+                        <i class="fas ${data.icon}"></i> ${translatedCategory}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="city-temp">${data.temp}°C</div>
+                    <div class="quality-badge" style="background-color: ${data.color}">Q: ${data.quality}</div>
+                </div>
+            `;
+            return card;
+        }
 
-        Object.entries(otherForecasts).forEach(([city, data]) => {
-            addMarker(data.lat, data.lon, city, data.quality, data.color);
+        // Update active navbar link based on current page
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.navbar-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath || 
+                (currentPath === '/' && link.getAttribute('href') === '/')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
         });
+
+        // Load main city forecast and other cities on page load (optimized)
+        function initApp() {
+            // Use requestIdleCallback if available, otherwise setTimeout
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    loadMainCityForecast();
+                    setTimeout(loadOtherCities, 200);
+                }, { timeout: 1000 });
+            } else {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        loadMainCityForecast();
+                        setTimeout(loadOtherCities, 200);
+                    }, 50);
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
-    {% endif %}
 
 </body>
 

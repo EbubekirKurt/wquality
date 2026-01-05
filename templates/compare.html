@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Cities - AtmosAI</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #e0e5ec;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --text-color: #2d3436;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #1a1a2e;
+            --card-bg: rgba(30, 30, 50, 0.8);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --text-color: #e0e5ec;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .top-navbar {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .navbar-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .navbar-link:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        .navbar-link.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .language-selector select {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .compare-form {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+        }
+
+        /* Autocomplete Dropdown */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            border: var(--glass-border);
+            z-index: 1000;
+            margin-top: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+            text-align: left;
+            color: var(--text-color);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        .compare-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .compare-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
+        }
+
+        .compare-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .city-compare-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .city-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .city-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .quality-score-large {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .quality-category-large {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            margin: 0.5rem 0;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .forecast-item {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .forecast-item:hover {
+            transform: scale(1.05);
+        }
+
+        .forecast-day {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .forecast-temp {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin: 0.5rem 0;
+        }
+
+        .forecast-quality {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-color);
+        }
+
+        .error {
+            background: #ff7675;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .comparison-summary {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .compare-results {
+                grid-template-columns: 1fr;
+            }
+
+            .compare-form {
+                flex-direction: column;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+            .forecast-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+
+            .navbar-container {
+                flex-direction: column;
+            }
+
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-cloud-sun"></i>
+                <span>AtmosAI</span>
+            </a>
+            <div class="navbar-links">
+                <a href="/" class="navbar-link" data-i18n="nav_home">
+                    <i class="fas fa-home"></i> <span>Home</span>
+                </a>
+                <a href="/about" class="navbar-link" data-i18n="nav_how_it_works">
+                    <i class="fas fa-info-circle"></i> <span>How It Works</span>
+                </a>
+                <a href="/api-docs" class="navbar-link" data-i18n="nav_api_docs">
+                    <i class="fas fa-code"></i> <span>API Docs</span>
+                </a>
+                <a href="/compare" class="navbar-link active" data-i18n="nav_compare">
+                    <i class="fas fa-balance-scale"></i> <span>Compare</span>
+                </a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="language-selector">
+                    <select id="languageSelect" onchange="changeLanguage(this.value)">
+                        <option value="en">🇺🇸 EN</option>
+                        <option value="tr">🇹🇷 TR</option>
+                        <option value="fr">🇫🇷 FR</option>
+                        <option value="de">🇩🇪 DE</option>
+                        <option value="kr">🇰🇷 KR</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-balance-scale"></i> <span data-i18n="compare_cities">Compare Cities</span></h1>
+            <p data-i18n="compare_subtitle">Compare weather quality between two cities</p>
+        </div>
+
+        <form class="compare-form" id="compareForm">
+            <div class="form-group">
+                <label data-i18n="city1">City 1</label>
+                <div style="position: relative;">
+                    <input type="text" id="city1" placeholder="Istanbul" autocomplete="off" required>
+                    <div id="searchResults1" class="search-results"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label data-i18n="city2">City 2</label>
+                <div style="position: relative;">
+                    <input type="text" id="city2" placeholder="New York" autocomplete="off" required>
+                    <div id="searchResults2" class="search-results"></div>
+                </div>
+            </div>
+            <button type="submit" class="compare-btn" data-i18n="compare">Compare</button>
+        </form>
+
+        <div id="compareResults"></div>
+    </div>
+
+    <script>
+        // Internationalization
+        let currentLocale = localStorage.getItem('locale') || 'en';
+        let translations = {};
+
+        async function loadLocale(lang) {
+            try {
+                const response = await fetch(`/api/locale/${lang}`);
+                translations = await response.json();
+                currentLocale = lang;
+                localStorage.setItem('locale', lang);
+                applyTranslations();
+            } catch (err) {
+                console.error('Error loading locale:', err);
+            }
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[key]) {
+                    const span = el.querySelector('span');
+                    if (span) {
+                        span.textContent = translations[key];
+                    } else {
+                        el.textContent = translations[key];
+                    }
+                }
+            });
+
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = currentLocale;
+            }
+        }
+
+        function changeLanguage(lang) {
+            loadLocale(lang);
+        }
+
+        // Dark Mode
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        initTheme();
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        loadLocale(currentLocale);
+
+        // Autocomplete for City inputs
+        function setupAutocomplete(inputId, resultsId) {
+            const cityInput = document.getElementById(inputId);
+            const searchResults = document.getElementById(resultsId);
+            if (!cityInput || !searchResults) return;
+            
+            let debounceTimer;
+
+            cityInput.addEventListener('input', function () {
+                const query = this.value.trim();
+                clearTimeout(debounceTimer);
+                
+                if (query.length < 3) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    fetch(`/api/search-city?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            if (data.results && data.results.length > 0) {
+                                data.results.forEach(city => {
+                                    const div = document.createElement('div');
+                                    div.className = 'search-result-item';
+                                    div.textContent = city.display;
+                                    div.onclick = () => {
+                                        cityInput.value = city.name;
+                                        searchResults.style.display = 'none';
+                                    };
+                                    searchResults.appendChild(div);
+                                });
+                                searchResults.style.display = 'flex';
+                            } else {
+                                searchResults.style.display = 'none';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error fetching cities:', err);
+                            searchResults.style.display = 'none';
+                        });
+                }, 300);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (e.target !== cityInput && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Setup autocomplete for both inputs
+        setupAutocomplete('city1', 'searchResults1');
+        setupAutocomplete('city2', 'searchResults2');
+
+        // Comparison Logic
+        document.getElementById('compareForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const city1 = document.getElementById('city1').value.trim();
+            const city2 = document.getElementById('city2').value.trim();
+            const resultsDiv = document.getElementById('compareResults');
+
+            if (!city1 || !city2) {
+                resultsDiv.innerHTML = '<div class="error">Please enter both cities</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const [res1, res2] = await Promise.all([
+                    fetch(`/api/forecast?city=${encodeURIComponent(city1)}`),
+                    fetch(`/api/forecast?city=${encodeURIComponent(city2)}`)
+                ]);
+
+                const data1 = await res1.json();
+                const data2 = await res2.json();
+
+                if (data1.error || data2.error) {
+                    resultsDiv.innerHTML = `<div class="error">${data1.error || data2.error}</div>`;
+                    return;
+                }
+
+                renderComparison(data1, data2);
+            } catch (err) {
+                resultsDiv.innerHTML = '<div class="error">Error loading data. Please try again.</div>';
+                console.error(err);
+            }
+        });
+
+        function renderComparison(data1, data2) {
+            const f1 = data1.forecast.forecasts[0];
+            const f2 = data2.forecast.forecasts[0];
+            const avg1 = data1.forecast.forecasts.reduce((sum, f) => sum + f.quality, 0) / data1.forecast.forecasts.length;
+            const avg2 = data2.forecast.forecasts.reduce((sum, f) => sum + f.quality, 0) / data2.forecast.forecasts.length;
+
+            const resultsDiv = document.getElementById('compareResults');
+            resultsDiv.innerHTML = `
+                <div class="compare-results">
+                    <div class="city-compare-card">
+                        <div class="city-header">
+                            <h2>${data1.city}</h2>
+                            <div class="quality-score-large" style="color: ${f1.color}">${f1.quality}</div>
+                            <div class="quality-category-large" style="background-color: ${f1.color}">${f1.category}</div>
+                            <p style="margin-top: 1rem;"><strong>Avg:</strong> ${avg1.toFixed(1)}</p>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 1rem;">Today</h3>
+                            <p><strong>Temp:</strong> ${f1.temp}°C</p>
+                            <p><strong>Humidity:</strong> ${f1.humidity}%</p>
+                            <p><strong>Quality:</strong> ${f1.quality}</p>
+                        </div>
+                        <div class="forecast-grid">
+                            ${data1.forecast.forecasts.slice(0, 7).map(f => `
+                                <div class="forecast-item">
+                                    <div class="forecast-day">${f.day}</div>
+                                    <div class="forecast-temp">${f.temp}°C</div>
+                                    <div class="forecast-quality" style="color: ${f.color}">${f.quality}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="city-compare-card">
+                        <div class="city-header">
+                            <h2>${data2.city}</h2>
+                            <div class="quality-score-large" style="color: ${f2.color}">${f2.quality}</div>
+                            <div class="quality-category-large" style="background-color: ${f2.color}">${f2.category}</div>
+                            <p style="margin-top: 1rem;"><strong>Avg:</strong> ${avg2.toFixed(1)}</p>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 1rem;">Today</h3>
+                            <p><strong>Temp:</strong> ${f2.temp}°C</p>
+                            <p><strong>Humidity:</strong> ${f2.humidity}%</p>
+                            <p><strong>Quality:</strong> ${f2.quality}</p>
+                        </div>
+                        <div class="forecast-grid">
+                            ${data2.forecast.forecasts.slice(0, 7).map(f => `
+                                <div class="forecast-item">
+                                    <div class="forecast-day">${f.day}</div>
+                                    <div class="forecast-temp">${f.temp}°C</div>
+                                    <div class="forecast-quality" style="color: ${f.color}">${f.quality}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-summary">
+                    <h3>Summary</h3>
+                    <p><strong>${avg1 > avg2 ? data1.city : data2.city}</strong> has better average weather quality (${Math.max(avg1, avg2).toFixed(1)} vs ${Math.min(avg1, avg2).toFixed(1)})</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+

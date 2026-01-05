@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - AtmosAI</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #e0e5ec;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --text-color: #2d3436;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #1a1a2e;
+            --card-bg: rgba(30, 30, 50, 0.8);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --text-color: #e0e5ec;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .top-navbar {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .navbar-link:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        .navbar-link.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            color: #fdcb6e;
+        }
+
+        .language-selector select {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .language-selector select:hover {
+            background: var(--card-bg);
+            border-color: var(--accent-color);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #2d3436, #0984e3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .content-card h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-card h3 {
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: #2d3436;
+        }
+
+        .endpoint {
+            background: rgba(45, 52, 54, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .method {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-right: 1rem;
+        }
+
+        .method.get {
+            background: #00b894;
+            color: white;
+        }
+
+        .method.post {
+            background: #0984e3;
+            color: white;
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            word-break: break-all;
+        }
+
+        .code-block {
+            background: #2d3436;
+            color: #dfe6e9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .param-table th,
+        .param-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .param-table th {
+            background: rgba(9, 132, 227, 0.1);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-cloud-sun"></i>
+                <span>AtmosAI</span>
+            </a>
+            <div class="navbar-links">
+                <a href="/" class="navbar-link" data-i18n="nav_home">
+                    <i class="fas fa-home"></i> <span>Home</span>
+                </a>
+                <a href="/about" class="navbar-link" data-i18n="nav_how_it_works">
+                    <i class="fas fa-info-circle"></i> <span>How It Works</span>
+                </a>
+                <a href="/api-docs" class="navbar-link active" data-i18n="nav_api_docs">
+                    <i class="fas fa-code"></i> <span>API Docs</span>
+                </a>
+                <a href="/compare" class="navbar-link" data-i18n="nav_compare">
+                    <i class="fas fa-balance-scale"></i> <span>Compare</span>
+                </a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="language-selector">
+                    <select id="languageSelect" onchange="changeLanguage(this.value)">
+                        <option value="en">🇺🇸 EN</option>
+                        <option value="tr">🇹🇷 TR</option>
+                        <option value="fr">🇫🇷 FR</option>
+                        <option value="de">🇩🇪 DE</option>
+                        <option value="kr">🇰🇷 KR</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-code"></i> <span data-i18n="api_docs_title">API Documentation</span></h1>
+            <p data-i18n="api_docs_subtitle">Integrate Weather Quality predictions into your applications</p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-info-circle"></i> <span data-i18n="base_url">Base URL</span></h2>
+            <p data-i18n="base_url_text">All API endpoints are available at:</p>
+            <div class="code-block">https://huggingface.co/spaces/ebubekirkurtt/weather-quality-app/api</div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-cloud-sun"></i> <span data-i18n="get_forecast">Get Forecast</span></h2>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/forecast?city={city_name}&history={true|false}</span>
+            </div>
+            <p data-i18n="get_forecast_text">Get weather quality forecast for a specific city.</p>
+            
+            <h3 data-i18n="parameters">Parameters</h3>
+            <table class="param-table">
+                <tr>
+                    <th data-i18n="parameter">Parameter</th>
+                    <th data-i18n="type">Type</th>
+                    <th data-i18n="required">Required</th>
+                    <th data-i18n="description">Description</th>
+                </tr>
+                <tr>
+                    <td>city</td>
+                    <td>string</td>
+                    <td data-i18n="required">Yes</td>
+                    <td data-i18n="city_name">City name (e.g., "Istanbul", "New York")</td>
+                </tr>
+                <tr>
+                    <td>history</td>
+                    <td>boolean</td>
+                    <td>No</td>
+                    <td data-i18n="include_history">Include historical data (default: false)</td>
+                </tr>
+            </table>
+
+            <h3 data-i18n="response">Response</h3>
+            <div class="code-block">{
+  "city": "Istanbul",
+  "forecast": {
+    "forecasts": [
+      {
+        "day": "Today",
+        "temp": 22.5,
+        "humidity": 65.0,
+        "cloud_cover": 2.5,
+        "quality": 78.3,
+        "icon": "fa-sun",
+        "category": "Good",
+        "color": "#0984e3",
+        "explanation": "Excellent conditions! Ideal Temperature contributing to a high score.",
+        "lat": 41.0082,
+        "lon": 28.9784
+      }
+    ],
+    "activities": {
+      "Running": {"icon": "fa-person-running", "day": "Tomorrow", "score": 82},
+      "Picnic": {"icon": "fa-utensils", "day": "Saturday", "score": 88}
+    },
+    "history": []
+  }
+}</div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-city"></i> <span data-i18n="get_other_cities">Get Other Cities</span></h2>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/other-cities</span>
+            </div>
+            <p data-i18n="get_other_cities_text">Get today's weather quality for default cities (cached for 10 minutes).</p>
+
+            <h3 data-i18n="response">Response</h3>
+            <div class="code-block">{
+  "New York": {
+    "temp": 18.5,
+    "humidity": 55.0,
+    "quality": 75.2,
+    "icon": "fa-cloud-sun",
+    "category": "Good",
+    "color": "#0984e3",
+    "lat": 40.7128,
+    "lon": -74.0060
+  },
+  "Tokyo": {
+    "temp": 15.3,
+    "humidity": 60.0,
+    "quality": 82.1,
+    ...
+  }
+}</div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-search"></i> <span data-i18n="search_city">Search City</span></h2>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/search-city?q={query}</span>
+            </div>
+            <p data-i18n="search_city_text">Search for cities by name (autocomplete).</p>
+
+            <h3 data-i18n="parameters">Parameters</h3>
+            <table class="param-table">
+                <tr>
+                    <th data-i18n="parameter">Parameter</th>
+                    <th data-i18n="type">Type</th>
+                    <th data-i18n="required">Required</th>
+                    <th data-i18n="description">Description</th>
+                </tr>
+                <tr>
+                    <td>q</td>
+                    <td>string</td>
+                    <td data-i18n="required">Yes</td>
+                    <td data-i18n="search_query">Search query (minimum 3 characters)</td>
+                </tr>
+            </table>
+
+            <h3 data-i18n="response">Response</h3>
+            <div class="code-block">{
+  "results": [
+    {
+      "name": "Istanbul",
+      "display": "Istanbul, Istanbul, Turkey",
+      "lat": 41.0082,
+      "lon": 28.9784
+    }
+  ]
+}</div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-history"></i> <span data-i18n="get_historical_data">Get Historical Data</span></h2>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/history?city={city_name}</span>
+            </div>
+            <p data-i18n="get_historical_data_text">Get historical temperature trends for the last 5 years.</p>
+
+            <h3 data-i18n="response">Response</h3>
+            <div class="code-block">{
+  "history": [
+    {"year": 2020, "temp": 18.5},
+    {"year": 2021, "temp": 19.2},
+    {"year": 2022, "temp": 19.8},
+    {"year": 2023, "temp": 20.1},
+    {"year": 2024, "temp": 20.5}
+  ]
+}</div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-map-marker-alt"></i> <span data-i18n="forecast_by_coords">Forecast by Coordinates</span></h2>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/forecast-by-coords?lat={latitude}&lon={longitude}</span>
+            </div>
+            <p data-i18n="forecast_by_coords_text">Get forecast using geographic coordinates.</p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-shield-alt"></i> <span data-i18n="caching">Caching</span></h2>
+            <p data-i18n="caching_text">All endpoints support HTTP caching:</p>
+            <ul>
+                <li><strong data-i18n="etag">ETag: Conditional requests supported</strong></li>
+                <li><strong data-i18n="cache_control">Cache-Control: Public caching with appropriate max-age</strong></li>
+                <li><strong data-i18n="not_modified">304 Not Modified: Returned when content unchanged</strong></li>
+            </ul>
+            <p data-i18n="cache_duration">Cache duration: 5-10 minutes depending on endpoint.</p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-exclamation-triangle"></i> <span data-i18n="error_handling">Error Handling</span></h2>
+            <p data-i18n="error_handling_text">All endpoints return standard HTTP status codes:</p>
+            <ul>
+                <li><strong data-i18n="status_200">200: Success</strong></li>
+                <li><strong data-i18n="status_304">304: Not Modified (cached)</strong></li>
+                <li><strong data-i18n="status_400">400: Bad Request (missing parameters)</strong></li>
+                <li><strong data-i18n="status_404">404: Not Found (city not found)</strong></li>
+                <li><strong data-i18n="status_500">500: Server Error</strong></li>
+            </ul>
+            <p data-i18n="error_responses">Error responses include a message:</p>
+            <div class="code-block">{
+  "error": "City 'InvalidCity' not found."
+}</div>
+        </div>
+    </div>
+
+    <script>
+        // Internationalization (i18n) System
+        let currentLocale = localStorage.getItem('locale') || 'en';
+        let translations = {};
+
+        async function loadLocale(lang) {
+            try {
+                const response = await fetch(`/api/locale/${lang}`);
+                translations = await response.json();
+                currentLocale = lang;
+                localStorage.setItem('locale', lang);
+                applyTranslations();
+            } catch (err) {
+                console.error('Error loading locale:', err);
+            }
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[key]) {
+                    const span = el.querySelector('span');
+                    if (span) {
+                        span.textContent = translations[key];
+                    } else {
+                        el.textContent = translations[key];
+                    }
+                }
+            });
+
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = currentLocale;
+            }
+        }
+
+        function changeLanguage(lang) {
+            loadLocale(lang);
+        }
+
+        // Dark Mode
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        initTheme();
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Load initial locale
+        loadLocale(currentLocale);
+
+        // Update active navbar link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.navbar-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
+

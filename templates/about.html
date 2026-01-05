@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works - AtmosAI</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #e0e5ec;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --text-color: #2d3436;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #1a1a2e;
+            --card-bg: rgba(30, 30, 50, 0.8);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --text-color: #e0e5ec;
+            --accent-color: #0984e3;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .top-navbar {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .navbar-link:hover {
+            background: rgba(9, 132, 227, 0.1);
+            color: var(--accent-color);
+        }
+
+        .navbar-link.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-selector select {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .language-selector select:hover {
+            background: var(--card-bg);
+            border-color: var(--accent-color);
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            color: #fdcb6e;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #2d3436, #0984e3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: #636e72;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .content-card h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-card h3 {
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: #2d3436;
+        }
+
+        .content-card p {
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            color: #636e72;
+        }
+
+        .content-card ul, .content-card ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+            line-height: 2;
+        }
+
+        .content-card li {
+            margin-bottom: 0.5rem;
+            color: #636e72;
+        }
+
+        .highlight-box {
+            background: rgba(9, 132, 227, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: var(--accent-color);
+        }
+
+        .formula-box {
+            background: rgba(45, 52, 54, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .feature-item i {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quality-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .quality-item {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .quality-excellent { background: #00b894; }
+        .quality-good { background: #0984e3; }
+        .quality-moderate { background: #fdcb6e; color: #2d3436; }
+        .quality-poor { background: #e17055; }
+        .quality-terrible { background: #d63031; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .navbar-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-cloud-sun"></i>
+                <span>AtmosAI</span>
+            </a>
+            <div class="navbar-links">
+                <a href="/" class="navbar-link" data-i18n="nav_home">
+                    <i class="fas fa-home"></i> <span>Home</span>
+                </a>
+                <a href="/about" class="navbar-link active" data-i18n="nav_how_it_works">
+                    <i class="fas fa-info-circle"></i> <span>How It Works</span>
+                </a>
+                <a href="/api-docs" class="navbar-link" data-i18n="nav_api_docs">
+                    <i class="fas fa-code"></i> <span>API Docs</span>
+                </a>
+                <a href="/compare" class="navbar-link" data-i18n="nav_compare">
+                    <i class="fas fa-balance-scale"></i> <span>Compare</span>
+                </a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="language-selector">
+                    <select id="languageSelect" onchange="changeLanguage(this.value)">
+                        <option value="en">🇺🇸 EN</option>
+                        <option value="tr">🇹🇷 TR</option>
+                        <option value="fr">🇫🇷 FR</option>
+                        <option value="de">🇩🇪 DE</option>
+                        <option value="kr">🇰🇷 KR</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-brain"></i> <span data-i18n="about_title">How It Works</span></h1>
+            <p data-i18n="about_subtitle">Understanding Our Weather Quality Prediction System</p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-chart-line"></i> <span data-i18n="overview">Overview</span></h2>
+            <p data-i18n="overview_text">
+                Our Weather Quality Index (WQI) is an AI-powered system that predicts how pleasant and comfortable 
+                the weather will be for outdoor activities. Unlike traditional weather forecasts that only show 
+                temperature and conditions, our system evaluates multiple factors to give you a comprehensive 
+                quality score from 0 to 100.
+            </p>
+            <div class="highlight-box">
+                <strong data-i18n="key_innovation">Key Innovation:</strong> <span data-i18n="key_innovation_text">We use a deep learning neural network trained on historical weather 
+                data to predict weather quality, not just weather conditions. This allows us to provide actionable 
+                insights for planning your activities.</span>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-cogs"></i> <span data-i18n="how_we_calculate">How We Calculate Quality</span></h2>
+            
+            <h3 data-i18n="input_parameters">Input Parameters</h3>
+            <p data-i18n="input_parameters_text">Our AI model analyzes three primary weather parameters:</p>
+            <ul>
+                <li><strong data-i18n="temperature_param">Temperature (°C): Average daily temperature</strong></li>
+                <li><strong data-i18n="humidity_param">Relative Humidity (%): Moisture level in the air</strong></li>
+                <li><strong data-i18n="cloud_cover_param">Cloud Cover (0-8 scale): Sky coverage converted from percentage</strong></li>
+            </ul>
+
+            <h3 data-i18n="ai_model">The AI Model</h3>
+            <p data-i18n="ai_model_text">
+                We use a deep neural network (TensorFlow/Keras) that has been trained on thousands of historical 
+                weather data points. The model learns complex patterns and relationships between weather parameters 
+                and human comfort levels.
+            </p>
+            <div class="formula-box">
+                Quality Score = Neural Network(Temperature, Humidity, Cloud Cover)
+            </div>
+
+            <h3 data-i18n="quality_scale">Quality Scale</h3>
+            <div class="quality-scale">
+                <div class="quality-item quality-excellent">
+                    <div>90-100</div>
+                    <div data-i18n="quality_excellent">Excellent</div>
+                </div>
+                <div class="quality-item quality-good">
+                    <div>70-89</div>
+                    <div data-i18n="quality_good">Good</div>
+                </div>
+                <div class="quality-item quality-moderate">
+                    <div>50-69</div>
+                    <div data-i18n="quality_moderate">Moderate</div>
+                </div>
+                <div class="quality-item quality-poor">
+                    <div>30-49</div>
+                    <div data-i18n="quality_poor">Poor</div>
+                </div>
+                <div class="quality-item quality-terrible">
+                    <div>0-29</div>
+                    <div data-i18n="quality_terrible">Terrible</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-lightbulb"></i> <span data-i18n="what_makes_good_weather">What Makes Good Weather?</span></h2>
+            
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <i class="fas fa-thermometer-half"></i>
+                    <h4 data-i18n="ideal_temperature">Ideal Temperature</h4>
+                    <p data-i18n="ideal_temperature_text">18-26°C is generally most comfortable for outdoor activities</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-tint"></i>
+                    <h4 data-i18n="moderate_humidity">Moderate Humidity</h4>
+                    <p data-i18n="moderate_humidity_text">40-60% relative humidity feels most comfortable</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-cloud"></i>
+                    <h4 data-i18n="clear_skies">Clear Skies</h4>
+                    <p data-i18n="clear_skies_text">Low cloud cover (0-2 on our scale) provides pleasant conditions</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong data-i18n="note">Note:</strong> <span data-i18n="note_text">The model considers all factors together. For example, a slightly higher 
+                temperature can still score well if humidity is low and skies are clear. The AI learns these 
+                complex relationships from real-world data.</span>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-robot"></i> <span data-i18n="ai_explainability">AI Explainability</span></h2>
+            <p data-i18n="ai_explainability_text">
+                Our system provides "Explainable AI" insights that tell you exactly why a day received its 
+                quality score. For example:
+            </p>
+            <ul>
+                <li data-i18n="ai_example1">"Excellent conditions! Ideal Temperature, Clear Skies contributing to a high score."</li>
+                <li data-i18n="ai_example2">"Score lowered by: Very Hot (32°C), High Humidity (85%)."</li>
+                <li data-i18n="ai_example3">"Moderate quality. Warm (28°C), Overcast."</li>
+            </ul>
+            <p data-i18n="ai_explainability_text2">
+                This transparency helps you understand not just the score, but what factors are influencing it.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-database"></i> <span data-i18n="data_sources">Data Sources</span></h2>
+            <p data-i18n="data_sources_text">We use reliable, open-source weather data:</p>
+            <ul>
+                <li><strong data-i18n="open_meteo">Open-Meteo API: For current and forecasted weather data</strong></li>
+                <li><strong data-i18n="open_meteo_archive">Open-Meteo Archive: For historical climate trends</strong></li>
+                <li><strong data-i18n="geocoding_api">Geocoding API: For accurate city location data</strong></li>
+            </ul>
+            <p data-i18n="data_sources_text2">
+                All data is updated in real-time, ensuring you get the most current and accurate forecasts 
+                available.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-calendar-check"></i> <span data-i18n="activity_recommendations">Activity Recommendations</span></h2>
+            <p data-i18n="activity_recommendations_text">
+                Our system automatically identifies the best days for specific activities based on weather quality:
+            </p>
+            <ul>
+                <li><strong data-i18n="running_criteria">Running: Temperature 10-25°C, Quality > 60</strong></li>
+                <li><strong data-i18n="picnic_criteria">Picnic: Temperature 18-30°C, Quality > 70</strong></li>
+                <li><strong data-i18n="photography_criteria">Photography: Quality > 60, Cloud Cover < 3</strong></li>
+            </ul>
+            <p data-i18n="activity_recommendations_text2">
+                If no suitable day is found in the 14-day forecast, we suggest "Maybe next week?" 
+                to set realistic expectations.
+            </p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-question-circle"></i> <span data-i18n="faq">Frequently Asked Questions</span></h2>
+            
+            <h3 data-i18n="faq_why_not_temp">Why not just use temperature?</h3>
+            <p data-i18n="faq_why_not_temp_text">
+                Temperature alone doesn't tell the full story. A 25°C day with 90% humidity feels very different 
+                from a 25°C day with 30% humidity. Our AI model accounts for these interactions.
+            </p>
+
+            <h3 data-i18n="faq_accuracy">How accurate is the forecast?</h3>
+            <p data-i18n="faq_accuracy_text">
+                Our quality predictions are based on the same weather data used by major weather services. 
+                The AI model has been trained on historical patterns, making it highly reliable for short-term 
+                forecasts (1-3 days) and reasonably accurate for longer periods (up to 14 days).
+            </p>
+
+            <h3 data-i18n="faq_events">Can I use this for planning events?</h3>
+            <p data-i18n="faq_events_text">
+                Absolutely! Our 14-day forecast with activity recommendations is perfect for planning outdoor 
+                events, trips, or activities. We recommend checking the forecast a few days before your event 
+                for the most accurate predictions.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Internationalization (i18n) System
+        let currentLocale = localStorage.getItem('locale') || 'en';
+        let translations = {};
+
+        async function loadLocale(lang) {
+            try {
+                const response = await fetch(`/api/locale/${lang}`);
+                translations = await response.json();
+                currentLocale = lang;
+                localStorage.setItem('locale', lang);
+                applyTranslations();
+            } catch (err) {
+                console.error('Error loading locale:', err);
+            }
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[key]) {
+                    const span = el.querySelector('span');
+                    if (span) {
+                        span.textContent = translations[key];
+                    } else {
+                        el.textContent = translations[key];
+                    }
+                }
+            });
+
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = currentLocale;
+            }
+        }
+
+        function changeLanguage(lang) {
+            loadLocale(lang);
+        }
+
+        // Dark Mode
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        initTheme();
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Load initial locale
+        loadLocale(currentLocale);
+
+        // Update active navbar link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.navbar-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
+
