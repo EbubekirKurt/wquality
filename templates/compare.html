@@ -137,6 +137,75 @@
             transition: all 0.2s;
         }
 
+        /* Temperature Unit Toggle */
+        .temp-unit-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+
+        .temp-unit-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .temp-unit-label.active {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent-color);
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
         .container {
             max-width: 1600px;
             margin: 0 auto;
@@ -414,6 +483,14 @@
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
+                <div class="temp-unit-toggle">
+                    <span class="temp-unit-label" id="tempUnitC">°C</span>
+                    <label class="switch">
+                        <input type="checkbox" id="tempUnitSwitch">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="temp-unit-label" id="tempUnitF">°F</span>
+                </div>
                 <div class="language-selector">
                     <select id="languageSelect" onchange="changeLanguage(this.value)">
                         <option value="en">🇺🇸 EN</option>
@@ -524,6 +601,73 @@
 
         loadLocale(currentLocale);
 
+        // Temperature Unit Toggle
+        let tempUnit = localStorage.getItem('tempUnit') || 'C';
+
+        function celsiusToFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+
+        function fahrenheitToCelsius(fahrenheit) {
+            return (fahrenheit - 32) * 5/9;
+        }
+
+        function updateTempUnit(unit) {
+            tempUnit = unit;
+            localStorage.setItem('tempUnit', unit);
+            
+            const labelC = document.getElementById('tempUnitC');
+            const labelF = document.getElementById('tempUnitF');
+            if (labelC && labelF) {
+                if (unit === 'C') {
+                    labelC.classList.add('active');
+                    labelF.classList.remove('active');
+                } else {
+                    labelC.classList.remove('active');
+                    labelF.classList.add('active');
+                }
+            }
+            
+            // Update all temperature displays
+            updateAllTemperatures();
+        }
+
+        function updateAllTemperatures() {
+            document.querySelectorAll('[data-temp-celsius]').forEach(el => {
+                const celsius = parseFloat(el.getAttribute('data-temp-celsius'));
+                if (!isNaN(celsius)) {
+                    if (tempUnit === 'F') {
+                        const fahrenheit = celsiusToFahrenheit(celsius);
+                        el.textContent = Math.round(fahrenheit) + '°F';
+                    } else {
+                        el.textContent = Math.round(celsius) + '°C';
+                    }
+                }
+            });
+        }
+
+        function initTempUnit() {
+            const savedUnit = localStorage.getItem('tempUnit') || 'C';
+            tempUnit = savedUnit;
+            
+            const switchElement = document.getElementById('tempUnitSwitch');
+            if (switchElement) {
+                switchElement.checked = (savedUnit === 'F');
+            }
+            
+            updateTempUnit(savedUnit);
+        }
+
+        const tempUnitSwitch = document.getElementById('tempUnitSwitch');
+        if (tempUnitSwitch) {
+            tempUnitSwitch.addEventListener('change', function() {
+                const newUnit = this.checked ? 'F' : 'C';
+                updateTempUnit(newUnit);
+            });
+        }
+
+        initTempUnit();
+
         // Autocomplete for City inputs
         function setupAutocomplete(inputId, resultsId) {
             const cityInput = document.getElementById(inputId);
@@ -622,6 +766,16 @@
             const avg1 = data1.forecast.forecasts.reduce((sum, f) => sum + f.quality, 0) / data1.forecast.forecasts.length;
             const avg2 = data2.forecast.forecasts.reduce((sum, f) => sum + f.quality, 0) / data2.forecast.forecasts.length;
 
+            // Temperature display based on current unit
+            function getTempDisplay(temp) {
+                if (tempUnit === 'F') {
+                    const fahrenheit = celsiusToFahrenheit(temp);
+                    return Math.round(fahrenheit) + '°F';
+                } else {
+                    return Math.round(temp) + '°C';
+                }
+            }
+
             const resultsDiv = document.getElementById('compareResults');
             resultsDiv.innerHTML = `
                 <div class="compare-results">
@@ -634,7 +788,7 @@
                         </div>
                         <div>
                             <h3 style="margin-bottom: 1rem;">Today</h3>
-                            <p><strong>Temp:</strong> ${f1.temp}°C</p>
+                            <p><strong>Temp:</strong> <span data-temp-celsius="${f1.temp}">${getTempDisplay(f1.temp)}</span></p>
                             <p><strong>Humidity:</strong> ${f1.humidity}%</p>
                             <p><strong>Quality:</strong> ${f1.quality}</p>
                         </div>
@@ -642,7 +796,7 @@
                             ${data1.forecast.forecasts.slice(0, 7).map(f => `
                                 <div class="forecast-item">
                                     <div class="forecast-day">${f.day}</div>
-                                    <div class="forecast-temp">${f.temp}°C</div>
+                                    <div class="forecast-temp" data-temp-celsius="${f.temp}">${getTempDisplay(f.temp)}</div>
                                     <div class="forecast-quality" style="color: ${f.color}">${f.quality}</div>
                                 </div>
                             `).join('')}
@@ -657,7 +811,7 @@
                         </div>
                         <div>
                             <h3 style="margin-bottom: 1rem;">Today</h3>
-                            <p><strong>Temp:</strong> ${f2.temp}°C</p>
+                            <p><strong>Temp:</strong> <span data-temp-celsius="${f2.temp}">${getTempDisplay(f2.temp)}</span></p>
                             <p><strong>Humidity:</strong> ${f2.humidity}%</p>
                             <p><strong>Quality:</strong> ${f2.quality}</p>
                         </div>
@@ -665,7 +819,7 @@
                             ${data2.forecast.forecasts.slice(0, 7).map(f => `
                                 <div class="forecast-item">
                                     <div class="forecast-day">${f.day}</div>
-                                    <div class="forecast-temp">${f.temp}°C</div>
+                                    <div class="forecast-temp" data-temp-celsius="${f.temp}">${getTempDisplay(f.temp)}</div>
                                     <div class="forecast-quality" style="color: ${f.color}">${f.quality}</div>
                                 </div>
                             `).join('')}

@@ -143,6 +143,75 @@
             border-color: var(--accent-color);
         }
 
+        /* Temperature Unit Toggle */
+        .temp-unit-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+
+        .temp-unit-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .temp-unit-label.active {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent-color);
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -292,6 +361,14 @@
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
+                <div class="temp-unit-toggle">
+                    <span class="temp-unit-label" id="tempUnitC">°C</span>
+                    <label class="switch">
+                        <input type="checkbox" id="tempUnitSwitch">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="temp-unit-label" id="tempUnitF">°F</span>
+                </div>
                 <div class="language-selector">
                     <select id="languageSelect" onchange="changeLanguage(this.value)">
                         <option value="en">🇺🇸 EN</option>
@@ -565,6 +642,48 @@
         if (themeToggle) {
             themeToggle.addEventListener('click', toggleTheme);
         }
+
+        // Temperature Unit Toggle
+        let tempUnit = localStorage.getItem('tempUnit') || 'C';
+
+        function updateTempUnit(unit) {
+            tempUnit = unit;
+            localStorage.setItem('tempUnit', unit);
+            
+            const labelC = document.getElementById('tempUnitC');
+            const labelF = document.getElementById('tempUnitF');
+            if (labelC && labelF) {
+                if (unit === 'C') {
+                    labelC.classList.add('active');
+                    labelF.classList.remove('active');
+                } else {
+                    labelC.classList.remove('active');
+                    labelF.classList.add('active');
+                }
+            }
+        }
+
+        function initTempUnit() {
+            const savedUnit = localStorage.getItem('tempUnit') || 'C';
+            tempUnit = savedUnit;
+            
+            const switchElement = document.getElementById('tempUnitSwitch');
+            if (switchElement) {
+                switchElement.checked = (savedUnit === 'F');
+            }
+            
+            updateTempUnit(savedUnit);
+        }
+
+        const tempUnitSwitch = document.getElementById('tempUnitSwitch');
+        if (tempUnitSwitch) {
+            tempUnitSwitch.addEventListener('change', function() {
+                const newUnit = this.checked ? 'F' : 'C';
+                updateTempUnit(newUnit);
+            });
+        }
+
+        initTempUnit();
 
         // Load initial locale
         loadLocale(currentLocale);

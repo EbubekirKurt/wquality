@@ -108,6 +108,7 @@
             display: flex;
             gap: 1.5rem;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .navbar-link {
@@ -150,6 +151,75 @@
         .language-selector select:hover {
             background: var(--card-bg);
             border-color: var(--accent-color);
+        }
+
+        /* Temperature Unit Toggle */
+        .temp-unit-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+
+        .temp-unit-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .temp-unit-label.active {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent-color);
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
 
         /* Dark Mode Toggle */
@@ -759,6 +829,24 @@
 
         /* Mobile Responsiveness */
         @media (max-width: 1200px) {
+            .navbar-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .navbar-links {
+                gap: 0.8rem;
+                justify-content: center;
+            }
+
+            .navbar-link span {
+                display: none;
+            }
+
+            .navbar-link {
+                padding: 0.5rem;
+            }
+
             .dashboard {
                 flex-direction: column;
                 align-items: center;
@@ -829,6 +917,28 @@
             .scroll-right {
                 right: -10px;
             }
+
+            .temp-unit-toggle {
+                padding: 0.4rem 0.7rem;
+            }
+
+            .temp-unit-label {
+                font-size: 0.8rem;
+            }
+
+            .switch {
+                width: 35px;
+                height: 18px;
+            }
+
+            .slider:before {
+                height: 12px;
+                width: 12px;
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(17px);
+            }
         }
     </style>
 </head>
@@ -857,6 +967,14 @@
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
+                <div class="temp-unit-toggle">
+                    <span class="temp-unit-label" id="tempUnitC">°C</span>
+                    <label class="switch">
+                        <input type="checkbox" id="tempUnitSwitch">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="temp-unit-label" id="tempUnitF">°F</span>
+                </div>
                 <div class="language-selector">
                     <select id="languageSelect" onchange="changeLanguage(this.value)">
                         <option value="en">🇺🇸 EN</option>
@@ -1226,6 +1344,77 @@
             themeToggle.addEventListener('click', toggleTheme);
         }
 
+        // Temperature Unit Toggle
+        let tempUnit = localStorage.getItem('tempUnit') || 'C';
+
+        function celsiusToFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+
+        function fahrenheitToCelsius(fahrenheit) {
+            return (fahrenheit - 32) * 5/9;
+        }
+
+        function updateTempUnit(unit) {
+            tempUnit = unit;
+            localStorage.setItem('tempUnit', unit);
+            
+            // Update unit labels
+            const labelC = document.getElementById('tempUnitC');
+            const labelF = document.getElementById('tempUnitF');
+            if (labelC && labelF) {
+                if (unit === 'C') {
+                    labelC.classList.add('active');
+                    labelF.classList.remove('active');
+                } else {
+                    labelC.classList.remove('active');
+                    labelF.classList.add('active');
+                }
+            }
+            
+            // Update all temperature displays
+            updateAllTemperatures();
+        }
+
+        function updateAllTemperatures() {
+            // Update all temperature values on the page
+            document.querySelectorAll('[data-temp-celsius]').forEach(el => {
+                const celsius = parseFloat(el.getAttribute('data-temp-celsius'));
+                if (!isNaN(celsius)) {
+                    if (tempUnit === 'F') {
+                        const fahrenheit = celsiusToFahrenheit(celsius);
+                        el.textContent = Math.round(fahrenheit) + '°F';
+                    } else {
+                        el.textContent = Math.round(celsius) + '°C';
+                    }
+                }
+            });
+        }
+
+        function initTempUnit() {
+            const savedUnit = localStorage.getItem('tempUnit') || 'C';
+            tempUnit = savedUnit;
+            
+            const switchElement = document.getElementById('tempUnitSwitch');
+            if (switchElement) {
+                switchElement.checked = (savedUnit === 'F');
+            }
+            
+            updateTempUnit(savedUnit);
+        }
+
+        // Temperature unit switch event
+        const tempUnitSwitch = document.getElementById('tempUnitSwitch');
+        if (tempUnitSwitch) {
+            tempUnitSwitch.addEventListener('change', function() {
+                const newUnit = this.checked ? 'F' : 'C';
+                updateTempUnit(newUnit);
+            });
+        }
+
+        // Initialize temperature unit
+        initTempUnit();
+
         // Get city from URL or default to Istanbul
         const urlParams = new URLSearchParams(window.location.search);
         const mainCity = urlParams.get('city') || 'Istanbul';
@@ -1334,6 +1523,15 @@
                 const translatedCategory = translateCategory(day.category);
                 const humidityLabel = translations.humidity || 'Hum';
                 
+                // Temperature display based on current unit
+                let tempDisplay;
+                if (tempUnit === 'F') {
+                    const fahrenheit = celsiusToFahrenheit(day.temp);
+                    tempDisplay = Math.round(fahrenheit) + '°F';
+                } else {
+                    tempDisplay = Math.round(day.temp) + '°C';
+                }
+                
                 html += `
                     <div class="forecast-card-main" style="border-bottom: 4px solid ${day.color}">
                         <div class="day-name">${translatedDay}</div>
@@ -1344,7 +1542,7 @@
                             <i class="fas fa-brain"></i> ${translations.why || 'Why?'}
                         </button>
                         <div class="details">
-                            <div>${day.temp}°C</div>
+                            <div data-temp-celsius="${day.temp}">${tempDisplay}</div>
                             <div>${humidityLabel}: ${day.humidity}%</div>
                         </div>
                     </div>
@@ -1852,6 +2050,16 @@
             card.className = 'city-card-small';
             card.onclick = () => searchCity(city);
             const translatedCategory = translateCategory(data.category);
+            
+            // Temperature display based on current unit
+            let tempDisplay;
+            if (tempUnit === 'F') {
+                const fahrenheit = celsiusToFahrenheit(data.temp);
+                tempDisplay = Math.round(fahrenheit) + '°F';
+            } else {
+                tempDisplay = Math.round(data.temp) + '°C';
+            }
+            
             card.innerHTML = `
                 <div class="city-info">
                     <h3>${city}</h3>
@@ -1860,7 +2068,7 @@
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="city-temp">${data.temp}°C</div>
+                    <div class="city-temp" data-temp-celsius="${data.temp}">${tempDisplay}</div>
                     <div class="quality-badge" style="background-color: ${data.color}">Q: ${data.quality}</div>
                 </div>
             `;
